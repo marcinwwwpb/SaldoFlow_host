@@ -1,5 +1,6 @@
 from decimal import Decimal
 from datetime import date, datetime
+from uuid import UUID
 
 from django.db import connection
 from django.db.models import Model
@@ -42,6 +43,8 @@ def _serialize_value(value):
         return str(value)
     if isinstance(value, (date, datetime)):
         return value.isoformat()
+    if isinstance(value, UUID):
+        return str(value)
     return value
 
 
@@ -86,6 +89,8 @@ def _is_tracked(sender):
 
 @receiver(pre_save)
 def capture_before_save(sender, instance, **kwargs):
+    if kwargs.get('raw'):
+        return
     if not _is_tracked(sender):
         return
     instance._audit_before = None
@@ -99,6 +104,8 @@ def capture_before_save(sender, instance, **kwargs):
 
 @receiver(post_save)
 def record_save(sender, instance, created, **kwargs):
+    if kwargs.get('raw'):
+        return
     if not _is_tracked(sender) or not _audit_table_ready():
         return
     before = getattr(instance, '_audit_before', None) or {}
