@@ -1,0 +1,8 @@
+<div class="admin-subnav mb-4">
+    <a href="{% url 'paneladmin_dashboard' %}" class="admin-subnav-link {% if request.resolver_match.url_name == 'paneladmin_dashboard' %}is-active{% endif %}">Przegląd</a>
+    <a href="{% url 'paneladmin_users' %}" class="admin-subnav-link {% if request.resolver_match.url_name == 'paneladmin_users' or request.resolver_match.url_name == 'paneladmin_zapisz_role' %}is-active{% endif %}">Użytkownicy</a>
+    <a href="{% url 'paneladmin_records' %}" class="admin-subnav-link {% if request.resolver_match.url_name == 'paneladmin_records' or request.resolver_match.url_name == 'paneladmin_zapisz_dom' or request.resolver_match.url_name == 'paneladmin_zapisz_firma' %}is-active{% endif %}">Dane</a>
+    <a href="{% url 'paneladmin_demon' %}" class="admin-subnav-link {% if request.resolver_match.url_name == 'paneladmin_demon' %}is-active{% endif %}">Procesy w tle</a>
+    <a href="{% url 'paneladmin_audit' %}" class="admin-subnav-link {% if request.resolver_match.url_name == 'paneladmin_audit' %}is-active{% endif %}">Audyt</a>
+    <a href="{% url 'admin:index' %}" class="admin-subnav-link">Django admin</a>
+</div>

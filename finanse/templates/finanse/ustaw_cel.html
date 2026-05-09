@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Cel oszczędnościowy - Budżet domowy{% endblock %}
+{% block brand_name %}Budżet domowy{% endblock %}
+
+{% block nav_actions %}
+{% include 'finanse/includes/home_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Plan oszczędności</span>
+        <h1>Ustaw cel na {{ rok }} rok</h1>
+        <p class="page-description">
+            Zdefiniuj roczną kwotę oszczędności, aby na dashboardzie widzieć realny postęp i motywację do działania.
+        </p>
+    </div>
+</div>
+
+<div class="row g-4 align-items-stretch">
+    <div class="col-lg-7">
+        <div class="form-panel h-100">
+            <form method="post" class="app-form">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="form-label" for="{{ form.kwota_docelowa.id_for_label }}">{{ form.kwota_docelowa.label }}</label>
+                    {{ form.kwota_docelowa }}
+                    {% if form.kwota_docelowa.help_text %}
+                        <div class="form-text">{{ form.kwota_docelowa.help_text }}</div>
+                    {% endif %}
+                    {% for error in form.kwota_docelowa.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-actions mt-4">
+                    <button class="btn btn-primary">Zapisz cel</button>
+                    <a href="{% url 'lista_miesiecy' %}" class="btn btn-secondary page-transition-link">Anuluj</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="hero-note h-100">
+            <h3 class="section-title">Po co ustawiać cel?</h3>
+            <p class="page-description mt-2">
+                Nawet prosty roczny target porządkuje decyzje finansowe i pokazuje, czy tempo oszczędzania jest wystarczające.
+            </p>
+
+            <div class="key-value-grid mt-4">
+                <div class="key-value-item"><strong>Widoczny progres</strong>Automatyczny pasek postępu na dashboardzie</div>
+                <div class="key-value-item"><strong>Jeden punkt odniesienia</strong>Łatwiej planować większe wydatki</div>
+                <div class="key-value-item"><strong>Lepsza dyscyplina</strong>Widać wpływ każdego miesiąca na wynik roczny</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

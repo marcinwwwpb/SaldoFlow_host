@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Import XML - Budżet domowy{% endblock %}
+{% block brand_name %}Budżet domowy{% endblock %}
+
+{% block nav_actions %}
+{% include 'finanse/includes/home_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Import danych</span>
+        <h1>Import danych z XML</h1>
+        <p class="page-description">
+            Wgraj plik XML z operacjami domowymi. Najprościej użyć wcześniej wyeksportowanego pliku z SaldoFlow.
+        </p>
+    </div>
+</div>
+
+<div class="row g-4 align-items-stretch">
+    <div class="col-lg-7">
+        <div class="form-panel h-100">
+            <form method="post" enctype="multipart/form-data" class="app-form">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Plik XML</label>
+                    <input type="file" name="plik" class="form-control" accept=".xml,text/xml,application/xml" required>
+                </div>
+                <div class="form-actions mt-4">
+                    <button class="btn btn-primary">Importuj plik</button>
+                    <a href="{% url 'lista_miesiecy' %}" class="btn btn-secondary page-transition-link">Anuluj</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="hero-note h-100">
+            <h3 class="section-title">Obsługiwany format</h3>
+            <p class="page-description mt-2">
+                Root <code>&lt;operacje&gt;</code> oraz wiele elementów <code>&lt;operacja&gt;</code> z polami: data, tytul, kwota, typ, kategoria, tagi, opis.
+            </p>
+            <div class="key-value-grid mt-4">
+                <div class="key-value-item"><strong>Kodowanie</strong>UTF-8</div>
+                <div class="key-value-item"><strong>Typ pliku</strong>XML</div>
+                <div class="key-value-item"><strong>Najlepiej działa</strong>Z eksportem XML z SaldoFlow</div>
+                <div class="key-value-item"><strong>Tip</strong>Eksport XML daje gotowy wzór do kolejnych importów</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

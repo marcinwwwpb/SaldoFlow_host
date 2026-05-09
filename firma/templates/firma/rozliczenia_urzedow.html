@@ -1,0 +1,216 @@
+
+{% extends "base.html" %}
+
+{% block title %}Rozliczenia z urzędami - Budżet firmowy{% endblock %}
+{% block brand_name %}Budżet firmowy{% endblock %}
+
+{% block nav_actions %}
+{% include 'firma/includes/company_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-compact">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Urząd Skarbowy i ZUS</span>
+        <h1>Rozliczenia z urzędami</h1>
+        <p class="page-description mb-0">
+            Jedno miejsce do miesięcznego rozliczenia firmy: zaliczka PIT, status JPK oraz roboczy komplet ZUS.
+        </p>
+    </div>
+    <div class="info-card compact-year-card tax-filter-card">
+        <form method="get" class="quick-filter-form quick-filter-form-compact tax-filter-form">
+            <div>
+                <label for="rok" class="form-label mb-2">Rok</label>
+                <select name="rok" id="rok" class="form-select" onchange="this.form.submit()">
+                    {% for r in lata %}
+                        <option value="{{ r }}" {% if r == rok %}selected{% endif %}>{{ r }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="miesiac" class="form-label mb-2">Miesiąc</label>
+                <select name="miesiac" id="miesiac" class="form-select" onchange="this.form.submit()">
+                    {% for idx, nazwa in miesiace_opcje %}
+                        <option value="{{ idx }}" {% if idx == miesiac %}selected{% endif %}>{{ nazwa }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card summary-card metric-card-income h-100">
+            <div class="card-body">
+                <div class="metric-label">Przychód miesiąca</div>
+                <div class="summary-value">{{ okres.przychod|floatformat:2 }} PLN</div>
+                <div class="summary-meta">Wpływy opłaconych faktur sprzedaży</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card summary-card metric-card-expense h-100">
+            <div class="card-body">
+                <div class="metric-label">Koszt miesiąca</div>
+                <div class="summary-value">{{ okres.koszt|floatformat:2 }} PLN</div>
+                <div class="summary-meta">Dokumenty kosztowe w okresie</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card summary-card metric-card-balance h-100">
+            <div class="card-body">
+                <div class="metric-label">Dochód roboczy</div>
+                <div class="summary-value">{{ okres.dochod|floatformat:2 }} PLN</div>
+                <div class="summary-meta">Podstawa do orientacyjnych wyliczeń</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card summary-card metric-card-balance h-100">
+            <div class="card-body">
+                <div class="metric-label">ZUS + podatek</div>
+                <div class="summary-value">{{ zus.razem|floatformat:2|default:'0,00' }} PLN</div>
+                <div class="summary-meta">Roboczo: ZUS DRA, bez pełnego zamknięcia roku</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-card mb-4">
+    <div class="goal-header mb-3">
+        <div>
+            <h3 class="section-title">Pakiet rozliczeniowy za {{ miesiac_nazwa }} {{ rok }}</h3>
+            <p class="page-description mb-0">Pobierz gotowy zestaw plików roboczych do pracy z księgowością, e-Urzędem Skarbowym i PUE ZUS.</p>
+        </div>
+    </div>
+    <form method="post" class="tax-download-form">
+        {% csrf_token %}
+        <input type="hidden" name="akcja" value="pobierz_pakiet">
+        <div class="tax-download-actions">
+            <button type="submit" name="scope" value="US" class="btn btn-primary">Pobierz pakiet US</button>
+            <button type="submit" name="scope" value="ZUS" class="btn btn-outline-primary">Pobierz pakiet ZUS</button>
+            <button type="submit" name="scope" value="ALL" class="btn btn-success">Pobierz komplet US + ZUS</button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="table-card h-100 tax-panel">
+            <div class="goal-header mb-3">
+                <div>
+                    <h3 class="section-title">Urząd skarbowy</h3>
+                    <p class="page-description mb-0">Najważniejsze rzeczy do podatku dochodowego i VAT/JPK.</p>
+                </div>
+                <span class="soft-badge">US</span>
+            </div>
+            <div class="tax-doc-card mb-3">
+                <div class="tax-doc-top">
+                    <strong>{{ pit.nazwa }}</strong>
+                    <span class="status-badge status-open">Do 20. dnia miesiąca</span>
+                </div>
+                <div class="tax-doc-grid">
+                    <div><span>Dochód</span><strong>{{ pit.dochod|floatformat:2 }} PLN</strong></div>
+                    <div><span>Stawka</span><strong>{{ pit.stawka }}</strong></div>
+                    <div><span>Podatek</span><strong>{{ pit.kwota_podatku|floatformat:2 }} PLN</strong></div>
+                    <div><span>Termin</span><strong>{{ pit.termin_platnosci }}</strong></div>
+                </div>
+                <p class="tax-note mb-0">{{ pit.uwaga }}</p>
+            </div>
+            <div class="tax-doc-card mb-3">
+                <div class="tax-doc-top">
+                    <strong>{{ pit_roczne.nazwa }}</strong>
+                    <span class="status-badge status-paid">Roczne</span>
+                </div>
+                <div class="tax-doc-grid">
+                    <div><span>Przychód roczny</span><strong>{{ pit_roczne.przychod_roczny|floatformat:2 }} PLN</strong></div>
+                    <div><span>Koszt roczny</span><strong>{{ pit_roczne.koszt_roczny|floatformat:2 }} PLN</strong></div>
+                    <div><span>Dochód roczny</span><strong>{{ pit_roczne.dochod_roczny|floatformat:2 }} PLN</strong></div>
+                    <div><span>Termin</span><strong>{{ pit_roczne.termin_zlozenia }}</strong></div>
+                </div>
+                <p class="tax-note mb-0">{{ pit_roczne.uwaga }}</p>
+            </div>
+            <div class="tax-doc-card">
+                <div class="tax-doc-top">
+                    <strong>JPK_V7M / VAT</strong>
+                    {% if jpk.gotowe %}
+                        <span class="status-badge status-paid">Gotowe do eksportu</span>
+                    {% elif jpk.ma_deklaracje %}
+                        <span class="status-badge status-open">Brakuje pozycji JPK</span>
+                    {% else %}
+                        <span class="status-badge status-draft">Brak deklaracji</span>
+                    {% endif %}
+                </div>
+                <div class="tax-doc-grid">
+                    <div><span>Pozycje JPK</span><strong>{{ jpk.pozycje }}</strong></div>
+                    <div><span>Deklaracja</span><strong>{% if jpk.ma_deklaracje %}Tak{% else %}Nie{% endif %}</strong></div>
+                    <div><span>VAT naliczony</span><strong>{{ okres.vat_naliczone|floatformat:2 }} PLN</strong></div>
+                    <div><span>Akcja</span><strong><a href="{% url 'deklaracja_jpk' %}?rok={{ rok }}&miesiac={{ miesiac }}" class="text-decoration-none">Otwórz</a></strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="table-card h-100 tax-panel">
+            <div class="goal-header mb-3">
+                <div>
+                    <h3 class="section-title">ZUS</h3>
+                    <p class="page-description mb-0">Robocze wyliczenie DRA i szablony raportów miesięcznych.</p>
+                </div>
+                <span class="soft-badge">ZUS</span>
+            </div>
+            <div class="tax-doc-card mb-3">
+                <div class="tax-doc-top">
+                    <strong>{{ zus.nazwa }}</strong>
+                    <span class="status-badge status-open">Do 20. dnia miesiąca</span>
+                </div>
+                <div class="tax-doc-grid">
+                    <div><span>Tryb ZUS</span><strong>{{ zus.tryb_zus }}</strong></div>
+                    <div><span>Chorobowe</span><strong>{% if zus.czy_chorobowe %}Tak{% else %}Nie{% endif %}</strong></div>
+                    <div><span>Składka zdrowotna</span><strong>{{ zus.zdrowotna|floatformat:2 }} PLN</strong></div>
+                    <div><span>Razem</span><strong>{{ zus.razem|floatformat:2 }} PLN</strong></div>
+                </div>
+                <div class="tax-doc-grid mt-3">
+                    <div><span>Emerytalne</span><strong>{{ zus.emerytalne|floatformat:2 }} PLN</strong></div>
+                    <div><span>Rentowe</span><strong>{{ zus.rentowe|floatformat:2 }} PLN</strong></div>
+                    <div><span>Wypadkowe</span><strong>{{ zus.wypadkowe|floatformat:2 }} PLN</strong></div>
+                    <div><span>Chorobowe</span><strong>{{ zus.chorobowe|floatformat:2 }} PLN</strong></div>
+                </div>
+                <p class="tax-note mb-0">{{ zus.uwaga }}</p>
+            </div>
+            <div class="tax-doc-card mb-3">
+                <div class="tax-doc-top">
+                    <strong>ZUS RCA</strong>
+                    <span class="status-badge status-draft">Szablon</span>
+                </div>
+                <p class="tax-note mb-0">Użyj przy pracownikach lub wspólnikach. Pakiet ZUS zawiera roboczy szablon pól potrzebnych do raportu.</p>
+            </div>
+            <div class="tax-doc-card">
+                <div class="tax-doc-top">
+                    <strong>ZUS RSA</strong>
+                    <span class="status-badge status-draft">Szablon</span>
+                </div>
+                <p class="tax-note mb-0">Użyj przy zasiłkach lub przerwach w opłacaniu składek. Bez modułu kadrowego aplikacja generuje szablon do uzupełnienia.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="goal-header mb-3">
+        <div>
+            <h3 class="section-title">Jak korzystać</h3>
+            <p class="page-description mb-0">Ta zakładka porządkuje rozliczenia, ale nie zastępuje końcowej weryfikacji w systemach urzędowych.</p>
+        </div>
+    </div>
+    <div class="key-value-grid mt-0">
+        <div class="key-value-item"><strong>Pakiet US</strong>Wyliczenie zaliczki PIT, roczny zestaw PIT-36L i status JPK.</div>
+        <div class="key-value-item"><strong>Pakiet ZUS</strong>Robocza deklaracja DRA oraz szablony RCA i RSA.</div>
+        <div class="key-value-item"><strong>Najlepsze użycie</strong>Przed eksportem JPK lub przed wysyłką danych do księgowości.</div>
+        <div class="key-value-item"><strong>Ograniczenie</strong>Brak modułu kadr i oficjalnej wysyłki do e-US / PUE ZUS.</div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Dodaj konto - Budżet domowy{% endblock %}
+{% block brand_name %}Budżet domowy{% endblock %}
+
+{% block nav_actions %}
+{% include 'finanse/includes/home_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Nowe konto</span>
+        <h1>Dodaj konto domowe</h1>
+        <p class="page-description">Dodaj rachunek, portfel albo konto oszczędnościowe, aby przypisywać do niego operacje.</p>
+    </div>
+</div>
+
+<div class="form-panel">
+  <form method="post" class="app-form">
+    {% csrf_token %}
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">{{ form.nazwa.label }}</label>
+        {{ form.nazwa }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">{{ form.typ.label }}</label>
+        {{ form.typ }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">{{ form.saldo_poczatkowe.label }}</label>
+        {{ form.saldo_poczatkowe }}
+      </div>
+      <div class="col-md-6 d-flex align-items-end">
+        <div class="form-check mb-2">
+          {{ form.aktywne }}
+          <label class="form-check-label" for="{{ form.aktywne.id_for_label }}">{{ form.aktywne.label }}</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-actions mt-4">
+      <button class="btn btn-success" type="submit">Zapisz konto</button>
+      <a href="{% url 'lista_kont' %}" class="btn btn-secondary page-transition-link">Anuluj</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

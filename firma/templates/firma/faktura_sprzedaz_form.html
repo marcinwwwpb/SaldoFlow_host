@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Nowa faktura sprzedaży - Finanse firmowe{% endblock %}
+{% block brand_name %}Budżet firmowy{% endblock %}
+{% block navbar_class %}firma-navbar{% endblock %}
+
+{% block nav_actions %}
+{% include 'firma/includes/company_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Nowa sprzedaż</span>
+        <h1>Dodaj fakturę sprzedaży</h1>
+        <p class="page-description">
+            Wprowadź dokument sprzedażowy. Kwota brutto wylicza się automatycznie
+            na podstawie kwoty netto i wybranej stawki VAT.
+        </p>
+    </div>
+</div>
+
+<div class="form-panel">
+    <form method="post" class="app-form" id="sprzedaz-form">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">{{ form.numer.label_tag }}{{ form.numer }}</div>
+            <div class="col-md-6">{{ form.kontrahent.label_tag }}{{ form.kontrahent }}</div>
+
+            <div class="col-md-6">{{ form.data_wystawienia.label_tag }}{{ form.data_wystawienia }}</div>
+            <div class="col-md-6">{{ form.data_sprzedazy.label_tag }}{{ form.data_sprzedazy }}</div>
+
+            <div class="col-md-4">{{ form.kwota_netto.label_tag }}{{ form.kwota_netto }}</div>
+            <div class="col-md-4">{{ form.vat_rate.label_tag }}{{ form.vat_rate }}</div>
+            <div class="col-md-4">{{ form.kwota_brutto.label_tag }}{{ form.kwota_brutto }}</div>
+
+            <div class="col-md-12 d-flex align-items-end">
+                <div class="form-check mb-2">
+                    {{ form.czy_oplacona }}
+                    <label class="form-check-label" for="{{ form.czy_oplacona.id_for_label }}">
+                        {{ form.czy_oplacona.label }}
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-12">{{ form.opis.label_tag }}{{ form.opis }}</div>
+        </div>
+
+        <div class="form-actions mt-4">
+            <button class="btn btn-success">Zapisz</button>
+            <a href="{% url 'faktury_sprzedazy' %}" class="btn btn-secondary page-transition-link">Anuluj</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const nettoField = document.getElementById('id_kwota_netto');
+    const vatRateField = document.getElementById('id_vat_rate');
+    const bruttoField = document.getElementById('id_kwota_brutto');
+
+    function parseMoney(value) {
+        const normalized = String(value || '')
+            .replace(/\s/g, '')
+            .replace(',', '.')
+            .replace(/[^\d.-]/g, '');
+        if (!normalized || normalized === '-' || normalized === '.') {
+            return 0;
+        }
+        const number = Number(normalized);
+        return Number.isFinite(number) ? number : 0;
+    }
+
+    function formatMoney(value) {
+        return Number(value).toFixed(2);
+    }
+
+    function resolveVatRate() {
+        const value = String(vatRateField ? vatRateField.value : '23').trim().toUpperCase();
+        if (value === 'ZW') return 0;
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : 23;
+    }
+
+    function recalculateBrutto() {
+        const netto = parseMoney(nettoField ? nettoField.value : 0);
+        const rate = resolveVatRate();
+        const brutto = netto * (1 + rate / 100);
+
+        if (bruttoField) {
+            bruttoField.value = formatMoney(brutto);
+        }
+    }
+
+    if (bruttoField) {
+        bruttoField.readOnly = true;
+        bruttoField.classList.add('bg-light');
+    }
+
+    if (nettoField) {
+        nettoField.addEventListener('input', recalculateBrutto);
+        nettoField.addEventListener('change', recalculateBrutto);
+    }
+
+    if (vatRateField) {
+        vatRateField.addEventListener('change', recalculateBrutto);
+    }
+
+    recalculateBrutto();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Centrum finansów — {{ APP_NAME }}{% endblock %}
+{% block body_class %}public-shell{% endblock %}
+{% block content %}
+<div class="page-header mb-4 page-header-compact">
+    <div class="page-header-content">
+        <h1>Centrum finansów</h1>
+        <p class="page-description">Wybierz obszar, w którym chcesz działać teraz.</p>
+    </div>
+    {% if show_admin_shortcuts %}
+    <div class="admin-quick-actions">
+        <a href="{% url 'paneladmin_dashboard' %}" class="btn btn-outline-primary page-transition-link">Panel admina</a>
+        <a href="{% url 'admin:index' %}" class="btn btn-primary page-transition-link">Django admin</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="module-grid mb-4 module-grid-modern">
+    <article class="module-card module-card-clean">
+        <div class="module-card-head">
+            <div>
+                <span class="soft-badge">Budżet prywatny</span>
+                <h3 class="mt-3">Budżet domowy</h3>
+                <p>Operacje, konta, cele i miesięczne podsumowania.</p>
+            </div>
+            <span class="module-icon">🏠</span>
+        </div>
+        <div class="module-meta">
+            <div class="meta-pill"><span>Konta</span><strong>{{ dom_accounts }}</strong></div>
+            <div class="meta-pill"><span>Operacje</span><strong>{{ dom_operations }}</strong></div>
+            <div class="meta-pill"><span>Łączna wartość wpisów</span><strong>{{ dom_balance|floatformat:2 }} PLN</strong></div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'lista_miesiecy' %}" class="btn btn-primary page-transition-link">Otwórz budżet domowy</a>
+            {% if dom_accounts == 0 %}
+                <a href="{% url 'dodaj_konto' %}" class="btn btn-outline-primary page-transition-link">Dodaj konto</a>
+            {% elif dom_operations == 0 %}
+                <a href="{% url 'dodaj_operacje' %}" class="btn btn-outline-primary page-transition-link">Dodaj operację</a>
+            {% endif %}
+        </div>
+    </article>
+
+    <article class="module-card module-card-clean">
+        <div class="module-card-head">
+            <div>
+                <span class="soft-badge">Firma</span>
+                <h3 class="mt-3">Budżet firmowy</h3>
+                <p>Sprzedaż, koszty, kontrahenci, JPK i rozliczenia.</p>
+            </div>
+            <span class="module-icon">🏢</span>
+        </div>
+        <div class="module-meta">
+            <div class="meta-pill"><span>Konfiguracja firmy</span><strong>{% if company_settings_ready %}gotowa{% else %}do uzupełnienia{% endif %}</strong></div>
+            <div class="meta-pill"><span>Faktury sprzedaży</span><strong>{{ company_sales }}</strong></div>
+            <div class="meta-pill"><span>Koszty / obrót</span><strong>{{ company_costs }} / {{ company_turnover|floatformat:2 }} PLN</strong></div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'firma_dashboard' %}" class="btn btn-primary page-transition-link">Otwórz finanse firmowe</a>
+            {% if not company_settings_ready %}
+                <a href="{% url 'ustawienia_firmy' %}" class="btn btn-outline-primary page-transition-link">Uzupełnij ustawienia</a>
+            {% elif company_documents == 0 %}
+                <a href="{% url 'dodaj_fakture_sprzedazy' %}" class="btn btn-outline-primary page-transition-link">Dodaj fakturę</a>
+            {% endif %}
+        </div>
+    </article>
+
+    <aside class="checklist-card checklist-card-clean">
+        <span class="soft-badge">Gotowość konta</span>
+        <h3 class="mt-3">Stan uruchomienia</h3>
+        <p>{{ onboarding_done }}/{{ onboarding|length }} kroków wykonanych.</p>
+        <ul class="checklist">
+            {% for item in onboarding %}
+                <li class="{% if item.done %}done{% endif %}">
+                    <span>{{ item.label }}</span>
+                    <span class="checkmark">{% if item.done %}✓{% else %}•{% endif %}</span>
+                </li>
+            {% endfor %}
+        </ul>
+        {% if next_step %}
+            <div class="hero-note mt-3">
+                <h4 class="section-title">Najbliższy sensowny krok</h4>
+                <p class="page-description mb-3">{{ next_step.label }}</p>
+                <a href="{{ next_step.url }}" class="btn btn-primary page-transition-link">Przejdź</a>
+            </div>
+        {% endif %}
+    </aside>
+</div>
+{% endblock %}

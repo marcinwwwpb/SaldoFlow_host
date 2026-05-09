@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Aktywacja konta — {{ APP_NAME }}{% endblock %}
+{% block body_class %}public-shell{% endblock %}
+{% block brand_name %}Aktywacja konta{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="auth-card text-center">
+            <span class="page-eyebrow">Prawie gotowe</span>
+            <h1>Sprawdź wiadomość e-mail</h1>
+            <p class="page-description mx-auto">Wysłaliśmy link aktywacyjny. Po kliknięciu konto zostanie odblokowane i przejdziesz do wyboru modułu.</p>
+            <div class="account-links justify-content-center mt-4">
+                <a href="{% url 'accounts_login' %}" class="btn btn-primary page-transition-link">Przejdź do logowania</a>
+                <a href="{% url 'accounts_resend_activation' %}" class="btn btn-outline-secondary page-transition-link">Wyślij link ponownie</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,113 @@
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const button = document.getElementById('{{ button_id|default:"nip-lookup-btn" }}');
+    const status = document.getElementById('{{ status_id|default:"nip-lookup-status" }}');
+    const nipField = document.getElementById('{{ nip_field_id }}');
+    const selectField = document.getElementById('{{ select_field_id|default:"" }}');
+
+    const fieldMap = {
+        '{{ name_field_id|default:"" }}': 'nazwa',
+        '{{ nip_target_field_id|default:nip_field_id }}': 'nip',
+        '{{ regon_field_id|default:"" }}': 'regon',
+        '{{ address_field_id|default:"" }}': 'adres',
+        '{{ email_field_id|default:"" }}': 'email',
+        '{{ phone_field_id|default:"" }}': 'telefon',
+        '{{ www_field_id|default:"" }}': 'strona_www',
+        '{{ status_field_id|default:"" }}': 'status_rejestru',
+        '{{ owner_field_id|default:"" }}': 'wlasciciel',
+        '{{ country_field_id|default:"" }}': 'kod_kraju'
+    };
+
+    function sanitizeNip(value) {
+        return String(value || '').replace(/[^\d]/g, '');
+    }
+
+    function setStatus(text, className) {
+        if (!status) return;
+        status.textContent = text;
+        status.className = className || 'small text-muted';
+    }
+
+    function fillFields(data) {
+        Object.entries(fieldMap).forEach(([fieldId, key]) => {
+            if (!fieldId) return;
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            const value = data[key];
+            if (value === undefined || value === null || value === '') return;
+            field.value = value;
+            field.dispatchEvent(new Event('input', { bubbles: true }));
+            field.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+        if (selectField && data.nazwa) {
+            const normalized = String(data.nazwa).trim().toLowerCase();
+            const options = Array.from(selectField.options || []);
+            const exact = options.find(function (option) {
+                return String(option.textContent || '').trim().toLowerCase() === normalized;
+            });
+            if (exact) {
+                selectField.value = exact.value;
+                selectField.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+    }
+
+    async function lookupByNip() {
+        if (!nipField) return;
+
+        const cleaned = sanitizeNip(nipField.value);
+        nipField.value = cleaned;
+
+        if (!cleaned) {
+            setStatus('Najpierw wpisz NIP.', 'small text-danger');
+            return;
+        }
+
+        if (cleaned.length !== 10) {
+            setStatus('NIP musi mieć dokładnie 10 cyfr.', 'small text-danger');
+            return;
+        }
+
+        if (button) button.disabled = true;
+        setStatus('Pobieranie danych...', 'small text-muted');
+
+        try {
+            const response = await fetch("{% url 'api_ceidg_po_nip' %}?nip=" + encodeURIComponent(cleaned), {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const payload = await response.json();
+
+            if (!response.ok || !payload.ok || !payload.dane) {
+                throw new Error(payload.error || 'Nie udało się pobrać danych z CEIDG.');
+            }
+
+            fillFields(payload.dane);
+
+            if (payload.dane.source === 'demo') {
+                setStatus('Uzupełniono formularz danymi demonstracyjnymi.', 'small text-warning');
+            } else {
+                setStatus('Dane zostały pobrane z CEIDG.', 'small text-success');
+            }
+        } catch (error) {
+            setStatus(error.message || 'Nie udało się pobrać danych z CEIDG.', 'small text-danger');
+        } finally {
+            if (button) button.disabled = false;
+        }
+    }
+
+    if (button) {
+        button.addEventListener('click', lookupByNip);
+    }
+
+    if (nipField) {
+        nipField.addEventListener('blur', function () {
+            nipField.value = sanitizeNip(nipField.value);
+        });
+    }
+});
+</script>

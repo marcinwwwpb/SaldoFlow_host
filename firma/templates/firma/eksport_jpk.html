@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Eksport JPK - Budżet firmowy{% endblock %}
+{% block brand_name %}Budżet firmowy{% endblock %}
+{% block navbar_class %}firma-navbar{% endblock %}
+
+{% block nav_actions %}
+{% include 'firma/includes/company_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">JPK</span>
+        <h1>Eksport JPK V7M</h1>
+        <p class="page-description">
+            Możesz pobrać pojedynczy XML lub cały pakiet ZIP z wielu miesięcy jednocześnie.
+        </p>
+    </div>
+</div>
+
+<div class="row g-4 align-items-stretch">
+    <div class="col-lg-8">
+        <div class="table-card h-100">
+            <div class="goal-header mb-3">
+                <div>
+                    <h3 class="section-title">Miesiące gotowe do eksportu</h3>
+                    <p class="page-description mb-0">
+                        Gotowych miesięcy: {{ gotowe_count }} / 12
+                    </p>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="export-grid">
+                    {% for miesiac in miesiace %}
+                        <label class="export-card {% if not miesiac.gotowe %}export-card-disabled{% endif %}">
+                            <div class="export-card-top">
+                                <div>
+                                    <div class="month-name">{{ miesiac.nazwa }}</div>
+                                    <div class="page-description small mb-0">
+                                        Kosztów JPK: {{ miesiac.liczba_kosztow }}
+                                    </div>
+                                </div>
+
+                                {% if miesiac.gotowe %}
+                                    <input type="checkbox" name="miesiace" value="{{ miesiac.nr }}">
+                                {% endif %}
+                            </div>
+
+                            <div class="mt-3">
+                                {% if miesiac.gotowe %}
+                                    <span class="badge bg-success-subtle text-success-emphasis">Gotowe do pobrania</span>
+                                {% elif miesiac.ma_deklaracje %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis">Brak kosztów JPK</span>
+                                {% elif miesiac.liczba_kosztow %}
+                                    <span class="badge bg-info-subtle text-info-emphasis">Brak deklaracji</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary-emphasis">Brak danych</span>
+                                {% endif %}
+                            </div>
+                        </label>
+                    {% endfor %}
+                </div>
+
+                <div class="form-actions mt-4">
+                    <button type="submit" class="btn btn-primary">Pobierz zaznaczone</button>
+                    <button type="submit" name="pobierz_wszystkie" value="1" class="btn btn-success">
+                        Pobierz wszystkie z danymi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="hero-note h-100">
+            <h3 class="section-title">Jak to działa?</h3>
+            <ul class="styled-list mt-3">
+                <li>Jeden miesiąc = pojedynczy plik XML.</li>
+                <li>Wiele miesięcy = paczka ZIP.</li>
+                <li>Miesiąc musi mieć koszty JPK i zapisaną deklarację.</li>
+            </ul>
+
+            <div class="form-actions mt-4">
+                <a href="{% url 'deklaracja_jpk' %}?rok={{ rok }}" class="btn btn-outline-primary page-transition-link">
+                    Uzupełnij deklarację
+                </a>
+                <a href="{% url 'ustawienia_firmy' %}" class="btn btn-outline-secondary page-transition-link">
+                    Dane firmy
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

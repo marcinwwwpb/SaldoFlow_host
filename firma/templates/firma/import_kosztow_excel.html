@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Import Excel kosztów - Finanse firmowe{% endblock %}
+{% block brand_name %}Budżet firmowy{% endblock %}
+{% block navbar_class %}firma-navbar{% endblock %}
+
+{% block nav_actions %}
+{% include 'firma/includes/company_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Import</span>
+        <h1>Import kosztów z Excela</h1>
+        <p class="page-description">
+            Wgraj plik `.xlsx` z kolumnami zgodnymi z układem importu do zakupów firmowych.
+        </p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="form-panel">
+            <form method="post" enctype="multipart/form-data" class="app-form">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.plik.id_for_label }}">{{ form.plik.label }}</label>
+                    {{ form.plik }}
+                    <div class="form-text" id="import-excel-help">Załaduj plik Excel z kosztami. Aplikacja odrzuci duplikaty i pokaże raport importu.</div>
+                </div>
+
+                <div class="form-actions mt-4">
+                    <button class="btn btn-success">Importuj</button>
+                    <a href="{% url 'faktury_kosztowe' %}" class="btn btn-secondary page-transition-link">Powrót</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="hero-note h-100">
+            <h3 class="section-title">Oczekiwane kolumny</h3>
+            <ul class="mt-3 mb-0">
+                {% for header in expected_headers %}
+                    <li>{{ header }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

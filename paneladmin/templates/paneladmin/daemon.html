@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block title %}Procesy w tle{% endblock %}
+{% block navbar_class %}firma-navbar admin-navbar{% endblock %}
+{% block nav_actions %}<div class="header-actions header-actions-scroll simple-back-nav"><a href="{% url 'module_selector' %}" class="btn btn-topbar btn-topbar-back page-transition-link">Powrót</a></div>{% endblock %}
+{% block nav_user_actions %}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .daemon-meta-grid .key-value-item {
+        min-width: 0;
+    }
+
+    .daemon-value {
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .daemon-value-wrap {
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .daemon-value-ellipsis {
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .daemon-value-path {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.9rem;
+        line-height: 1.45;
+    }
+
+    .daemon-card-header {
+        gap: 12px;
+    }
+
+    .daemon-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .daemon-actions form {
+        margin: 0;
+    }
+
+    @media (max-width: 767.98px) {
+        .daemon-actions {
+            width: 100%;
+        }
+
+        .daemon-actions form {
+            flex: 1 1 100%;
+        }
+
+        .daemon-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-compact">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Administracja</span>
+        <h1>Procesy w tle</h1>
+        <p class="page-description">Heartbeat demonów, importy i logi aplikacji zebrane w jednym miejscu.</p>
+    </div>
+</div>
+
+{% include 'paneladmin/includes/subnav.html' %}
+
+<div class="row g-4 mb-4">
+    {% for status in daemon_statuses %}
+    <div class="col-md-6">
+        <div class="table-card p-4 h-100 admin-health-card">
+            <div class="goal-header mb-3 daemon-card-header">
+                <div>
+                    <h3 class="section-title">Demon {{ status.module|upper }}</h3>
+                    <p class="section-subtitle">Status pracy, heartbeat i sterowanie usługą.</p>
+                </div>
+                <div class="daemon-actions">
+                    {% if can_manage_admin_panel %}
+                    <form method="post" action="{% url 'paneladmin_demon_action' status.module 'enable' %}">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-success">Włącz</button>
+                    </form>
+                    <form method="post" action="{% url 'paneladmin_demon_action' status.module 'disable' %}">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-outline-secondary">Wyłącz</button>
+                    </form>
+                    <form method="post" action="{% url 'paneladmin_demon_action' status.module 'reset' %}">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-primary">Reset</button>
+                    </form>
+                    {% else %}
+                    <span class="small text-muted">Podgląd tylko do odczytu</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="key-value-grid mt-0 daemon-meta-grid">
+                <div class="key-value-item">
+                    <strong>Stan</strong>
+                    <span class="status-inline {% if status.is_fresh %}status-ok{% else %}status-error{% endif %}">
+                        {% if status.is_fresh %}Aktywny{% else %}Brak heartbeat{% endif %}
+                    </span>
+                </div>
+
+                <div class="key-value-item">
+                    <strong>Tryb</strong>
+                    <span class="daemon-value">{{ status.desired_state|default:'—' }}</span>
+                </div>
+
+                <div class="key-value-item">
+                    <strong>Usługa</strong>
+                    <span class="daemon-value-wrap" title="{{ status.service_name|default:'' }}">
+                        <span class="daemon-value daemon-value-ellipsis">{{ status.service_name|default:'—' }}</span>
+                    </span>
+                </div>
+
+                <div class="key-value-item">
+                    <strong>Ostatnia akcja</strong>
+                    <span class="daemon-value">{{ status.last_control_action|default:'—' }}</span>
+                </div>
+
+                <div class="key-value-item">
+                    <strong>PID</strong>
+                    <span class="daemon-value">{{ status.pid|default:'—' }}</span>
+                </div>
+
+                <div class="key-value-item">
+                    <strong>Ostatni sygnał</strong>
+                    <span class="daemon-value">{{ status.last_seen|default:'—' }}</span>
+                </div>
+
+                <div class="key-value-item">
+                    <strong>Katalog</strong>
+                    <span class="daemon-value-wrap daemon-value-path" title="{{ status.watch_dir|default:'' }}">
+                        <span class="daemon-value daemon-value-ellipsis">{{ status.watch_dir|default:'—' }}</span>
+                    </span>
+                </div>
+
+                <div class="key-value-item">
+                    <strong>Interwał</strong>
+                    <span class="daemon-value">{{ status.sleep_seconds|default:'—' }} s</span>
+                </div>
+
+                {% if status.last_error %}
+                <div class="key-value-item">
+                    <strong>Błąd</strong>
+                    <span class="daemon-value-wrap daemon-value-path" title="{{ status.last_error }}">
+                        <span class="daemon-value daemon-value-ellipsis">{{ status.last_error }}</span>
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="table-card p-4">Brak plików statusu demona.</div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-4">
+        <div class="table-card p-4 h-100">
+            <div class="goal-header mb-3">
+                <div>
+                    <h3 class="section-title">Ostatnie importy</h3>
+                </div>
+            </div>
+            <div class="admin-mini-list">
+                {% for row in ostatnie_importy %}
+                <div class="admin-mini-item">
+                    <strong>{{ row.nazwa_pliku }}</strong>
+                    <span>{{ row.user }} · {{ row.status }} · rekordy: {{ row.liczba_rekordow }} / błędy: {{ row.liczba_bledow }}</span>
+                </div>
+                {% empty %}
+                <div class="text-muted">Brak danych.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-8">
+        <div class="table-card p-4 h-100">
+            <div class="goal-header mb-3">
+                <div>
+                    <h3 class="section-title">Logi demona</h3>
+                </div>
+            </div>
+
+            <form method="get" class="row g-3 mb-3">
+                {% for field in log_form %}
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+                {% endfor %}
+                <div class="col-md-2 col-sm-6 d-flex align-items-end">
+                    <button class="btn btn-primary w-100">Filtruj</button>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Moduł</th>
+                            <th>Poziom</th>
+                            <th>Plik</th>
+                            <th>Wiadomość</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in ostatnie_logi %}
+                        <tr>
+                            <td>{{ log.utworzono_o|date:'Y-m-d H:i' }}</td>
+                            <td>{{ log.modul }}</td>
+                            <td>{{ log.poziom }}</td>
+                            <td>{{ log.nazwa_pliku|default:'—' }}</td>
+                            <td>{{ log.wiadomosc }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-muted">Brak logów.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ APP_NAME }} — {{ APP_TAGLINE }}{% endblock %}
+{% block body_class %}start-page public-shell{% endblock %}
+{% block container_box_class %}container-box-plain{% endblock %}
+{% block content %}
+<section class="hero-modern hero-compact hero-minimal">
+    <div class="hero-copy">
+        <span class="hero-badge">Platforma finansowa</span>
+        <h1>Budżet domowy i firmowy w jednym miejscu</h1>
+        <p>{{ APP_MARKETING_LINE }}</p>
+        <div class="hero-actions">
+            <a href="{% url 'accounts_login' %}" class="btn btn-primary btn-lg page-transition-link">Zaloguj się</a>
+            <a href="{% url 'accounts_register' %}" class="btn btn-outline-primary btn-lg page-transition-link">Załóż konto</a>
+        </div>
+    </div>
+    <div class="hero-visual-card hero-visual-compact">
+        <div class="hero-panel-header">
+            <span>Centrum finansów</span>
+            <span>Dostęp po zalogowaniu</span>
+        </div>
+        <div class="hero-kpi-grid hero-kpi-grid-compact">
+            <div class="hero-kpi-card">
+                <small>Budżet domowy</small>
+                <strong>Operacje i konta</strong>
+                <span>wydatki, przychody i miesięczne podsumowania</span>
+            </div>
+            <div class="hero-kpi-card">
+                <small>Budżet firmowy</small>
+                <strong>Sprzedaż i koszty</strong>
+                <span>faktury, kontrahenci i rozliczenia</span>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

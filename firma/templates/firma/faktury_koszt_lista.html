@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Faktury kosztowe - Budżet firmowy{% endblock %}
+{% block brand_name %}Budżet firmowy{% endblock %}
+{% block navbar_class %}firma-navbar{% endblock %}
+
+{% block nav_actions %}
+{% include 'firma/includes/company_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <h1>Faktury kosztowe</h1>
+        <p class="page-description">Lista wszystkich kosztów firmy z pełnymi kwotami zaokrąglonymi do 2 miejsc po przecinku.</p>
+    </div>
+
+    <div class="header-actions">
+        <a href="{% url 'dodaj_fakture_kosztowa' %}" class="btn btn-primary page-transition-link">+ Dodaj fakturę kosztową</a>
+        <a href="{% url 'import_kosztow_excel' %}" class="btn btn-outline-secondary page-transition-link">Import Excel</a>
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle custom-table">
+            <thead>
+                <tr>
+                    <th>Numer</th>
+                    <th>Kontrahent</th>
+                    <th>Data zakupu</th>
+                    <th>Netto</th>
+                    <th>VAT</th>
+                    <th>Brutto</th>
+                    <th>Miesiąc JPK</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in faktury %}
+                    <tr>
+                        <td><strong>{{ f.numer_faktury }}</strong></td>
+                        <td>{{ f.kontrahent_nazwa }}</td>
+                        <td>{{ f.data_zakupu }}</td>
+                        <td>{{ f.kwota_netto|floatformat:2 }} PLN</td>
+                        <td>{{ f.kwota_vat|floatformat:2 }} PLN</td>
+                        <td class="table-amount negative">{{ f.kwota_brutto|floatformat:2 }} PLN</td>
+                        <td>
+                            {% if f.miesiac_jpk == 1 %}Styczeń
+                            {% elif f.miesiac_jpk == 2 %}Luty
+                            {% elif f.miesiac_jpk == 3 %}Marzec
+                            {% elif f.miesiac_jpk == 4 %}Kwiecień
+                            {% elif f.miesiac_jpk == 5 %}Maj
+                            {% elif f.miesiac_jpk == 6 %}Czerwiec
+                            {% elif f.miesiac_jpk == 7 %}Lipiec
+                            {% elif f.miesiac_jpk == 8 %}Sierpień
+                            {% elif f.miesiac_jpk == 9 %}Wrzesień
+                            {% elif f.miesiac_jpk == 10 %}Październik
+                            {% elif f.miesiac_jpk == 11 %}Listopad
+                            {% elif f.miesiac_jpk == 12 %}Grudzień
+                            {% else %}-{% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="table-empty">Brak faktur kosztowych.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

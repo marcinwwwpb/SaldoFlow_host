@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Szczegóły miesiąca - Budżet firmowy{% endblock %}
+{% block brand_name %}Budżet firmowy{% endblock %}
+
+{% block nav_actions %}
+{% include 'firma/includes/company_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-compact">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Miesiąc</span>
+        <h1>{{ miesiac_nazwa }} {{ rok }}</h1>
+        <p class="page-description mb-0">
+            Szczegóły sprzedaży, kosztów i stanu rozliczenia JPK dla wybranego miesiąca.
+        </p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card summary-card metric-card-income h-100">
+            <div class="card-body">
+                <div class="metric-label">Przychody opłacone</div>
+                <div class="summary-value">{{ przychod|floatformat:2 }} PLN</div>
+                <div class="summary-meta">Faktury sprzedaży oznaczone jako opłacone</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card summary-card metric-card-expense h-100">
+            <div class="card-body">
+                <div class="metric-label">Koszty</div>
+                <div class="summary-value">{{ koszt|floatformat:2 }} PLN</div>
+                <div class="summary-meta">Wszystkie dokumenty kosztowe z miesiąca</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card summary-card metric-card-balance h-100">
+            <div class="card-body">
+                <div class="metric-label">Bilans miesiąca</div>
+                <div class="summary-value">{{ dochod|floatformat:2 }} PLN</div>
+                <div class="summary-meta">Szybki obraz wyniku finansowego</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-card mb-4">
+    <div class="goal-header mb-3">
+        <div>
+            <h3 class="section-title">Status rozliczenia</h3>
+            <p class="page-description mb-0">{{ status_opis }}</p>
+        </div>
+        <span class="soft-badge">{{ status_etykieta }}</span>
+    </div>
+    <div class="key-value-grid mt-0">
+        <div class="key-value-item"><strong>Pozycje kosztowe do JPK</strong>{{ liczba_kosztow_jpk }}</div>
+        <div class="key-value-item"><strong>Deklaracja</strong>{% if deklaracja %}Uzupełniona{% else %}Brak{% endif %}</div>
+        <div class="key-value-item"><strong>Następny krok</strong><a href="{% url 'deklaracja_jpk' %}?rok={{ rok }}&miesiac={{ miesiac }}" class="link-primary text-decoration-none">Otwórz formularz JPK</a></div>
+    </div>
+</div>
+
+<div class="table-card mb-4">
+    <div class="goal-header mb-3">
+        <h3 class="section-title">Sprzedaż</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped align-middle custom-table">
+            <thead>
+                <tr>
+                    <th>Numer</th>
+                    <th>Kontrahent</th>
+                    <th>Data</th>
+                    <th>Kwota brutto</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in sprzedaze %}
+                    <tr>
+                        <td><strong>{{ f.numer }}</strong></td>
+                        <td>{{ f.kontrahent }}</td>
+                        <td>{{ f.data_wystawienia }}</td>
+                        <td class="table-amount positive">{{ f.kwota_brutto|floatformat:2 }} PLN</td>
+                        <td>
+                            {% if f.czy_oplacona %}
+                                <span class="status-badge status-paid">Opłacona</span>
+                            {% else %}
+                                <span class="status-badge status-open">Do rozliczenia</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5" class="table-empty">Brak dokumentów sprzedażowych w tym miesiącu.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="table-card mb-4">
+    <div class="goal-header mb-3">
+        <h3 class="section-title">Koszty</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped align-middle custom-table">
+            <thead>
+                <tr>
+                    <th>Numer</th>
+                    <th>Dostawca</th>
+                    <th>Data</th>
+                    <th>Netto</th>
+                    <th>VAT</th>
+                    <th>Brutto</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in koszty %}
+                    <tr>
+                        <td><strong>{{ f.numer_faktury }}</strong></td>
+                        <td>{{ f.kontrahent_nazwa }}</td>
+                        <td>{{ f.data_zakupu }}</td>
+                        <td>{{ f.kwota_netto|floatformat:2 }} PLN</td>
+                        <td>{{ f.kwota_vat|floatformat:2 }} PLN</td>
+                        <td class="table-amount negative">{{ f.kwota_brutto|floatformat:2 }} PLN</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6" class="table-empty">Brak dokumentów kosztowych w tym miesiącu.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="goal-header mb-3">
+        <h3 class="section-title">Deklaracja JPK</h3>
+    </div>
+
+    {% if deklaracja %}
+        <div class="key-value-grid">
+            <div class="key-value-item"><strong>P_17</strong>{{ deklaracja.p_17|floatformat:2 }}</div>
+            <div class="key-value-item"><strong>P_18</strong>{{ deklaracja.p_18|floatformat:2 }}</div>
+            <div class="key-value-item"><strong>P_19</strong>{{ deklaracja.p_19|floatformat:2 }}</div>
+            <div class="key-value-item"><strong>P_20</strong>{{ deklaracja.p_20|floatformat:2 }}</div>
+            <div class="key-value-item"><strong>P_51</strong>{{ deklaracja.p_51|floatformat:2 }}</div>
+            <div class="key-value-item"><strong>P_68</strong>{% if deklaracja.p_68 %}Tak{% else %}Nie{% endif %}</div>
+        </div>
+        {% if deklaracja.uzasadnienie %}
+            <div class="hero-note mt-4">
+                <h4 class="section-title">Uzasadnienie</h4>
+                <p class="page-description mb-0">{{ deklaracja.uzasadnienie }}</p>
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="page-description mb-0">Dla tego miesiąca nie zapisano jeszcze danych deklaracyjnych JPK.</p>
+    {% endif %}
+</div>
+{% endblock %}

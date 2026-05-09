@@ -1,0 +1,21 @@
+
+{% extends "base.html" %}
+{% block title %}Raporty miesięczne{% endblock %}
+{% block content %}
+<h1 class="mb-4">Raporty miesięczne</h1>
+<form method="post" class="row g-2 mb-4">{% csrf_token %}
+  <div class="col-auto"><input class="form-control" type="number" name="rok" value="{{ rok }}" disabled></div>
+  <div class="col-auto"><input class="form-control" type="number" name="miesiac" value="{{ miesiac }}" disabled></div>
+  <div class="col-auto"><button class="btn btn-primary" type="submit">Generuj raport procedurą SQL</button></div>
+</form>
+<table class="table table-striped">
+  <thead><tr><th>Okres</th><th>Przychody</th><th>Wydatki</th><th>Saldo</th><th>Wygenerowano</th></tr></thead>
+  <tbody>
+  {% for raport in raporty %}
+    <tr><td>{{ raport.rok }}-{{ raport.miesiac|stringformat:"02d" }}</td><td>{{ raport.suma_przychodow }}</td><td>{{ raport.suma_wydatkow }}</td><td>{{ raport.saldo }}</td><td>{{ raport.wygenerowano_o }}</td></tr>
+  {% empty %}
+    <tr><td colspan="5">Brak raportów.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

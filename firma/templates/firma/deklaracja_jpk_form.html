@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Dane deklaracyjne JPK - Budżet firmowy{% endblock %}
+{% block brand_name %}Budżet firmowy{% endblock %}
+{% block navbar_class %}firma-navbar{% endblock %}
+
+{% block nav_actions %}
+{% include 'firma/includes/company_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">JPK</span>
+        <h1>Dane deklaracyjne</h1>
+        <p class="page-description">Uzupełnij pola deklaracji dla wybranego roku i miesiąca. W Oracle możesz też przeliczyć je procedurą bazy danych.</p>
+    </div>
+</div>
+
+<div class="row g-4 align-items-stretch">
+    <div class="col-lg-7">
+        <div class="form-panel h-100">
+            <form method="post" class="app-form">
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    {% for field in form %}
+                        <div class="{% if field.name == 'uzasadnienie' %}col-12{% else %}col-md-6{% endif %}">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-actions mt-4">
+                    {% if can_edit %}
+                        <button class="btn btn-primary">Zapisz dane</button>
+                        <button class="btn btn-outline-success" type="submit" name="auto_wylicz" value="1">Przelicz procedurą Oracle</button>
+                    {% else %}
+                        <span class="small text-muted">Tryb tylko do odczytu — rola audytora nie może zmieniać deklaracji.</span>
+                    {% endif %}
+                    <a href="{% url 'firma_miesiac_detail' rok miesiac %}" class="btn btn-secondary page-transition-link">Powrót</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="hero-note h-100">
+            <h3 class="section-title">Szybka zmiana okresu</h3>
+            <form method="get" class="app-form mt-3">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Rok</label>
+                        <select name="rok" class="form-select">
+                            {% for r in lata %}
+                                <option value="{{ r }}" {% if r == rok %}selected{% endif %}>{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Miesiąc</label>
+                        <select name="miesiac" class="form-select">
+                            <option value="1" {% if miesiac == 1 %}selected{% endif %}>1</option>
+                            <option value="2" {% if miesiac == 2 %}selected{% endif %}>2</option>
+                            <option value="3" {% if miesiac == 3 %}selected{% endif %}>3</option>
+                            <option value="4" {% if miesiac == 4 %}selected{% endif %}>4</option>
+                            <option value="5" {% if miesiac == 5 %}selected{% endif %}>5</option>
+                            <option value="6" {% if miesiac == 6 %}selected{% endif %}>6</option>
+                            <option value="7" {% if miesiac == 7 %}selected{% endif %}>7</option>
+                            <option value="8" {% if miesiac == 8 %}selected{% endif %}>8</option>
+                            <option value="9" {% if miesiac == 9 %}selected{% endif %}>9</option>
+                            <option value="10" {% if miesiac == 10 %}selected{% endif %}>10</option>
+                            <option value="11" {% if miesiac == 11 %}selected{% endif %}>11</option>
+                            <option value="12" {% if miesiac == 12 %}selected{% endif %}>12</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions mt-4">
+                    <button class="btn btn-outline-primary">Przejdź do okresu</button>
+                </div>
+            </form>
+
+            <p class="page-description mt-4 mb-0">
+                Po zapisaniu danych możesz od razu pobrać XML z poziomu eksportu JPK albo wejść do szczegółów miesiąca.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

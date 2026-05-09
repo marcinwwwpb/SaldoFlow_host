@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Użytkownicy i dostęp{% endblock %}
+{% block navbar_class %}firma-navbar admin-navbar{% endblock %}
+{% block nav_actions %}<div class="header-actions header-actions-scroll simple-back-nav"><a href="{% url 'module_selector' %}" class="btn btn-topbar btn-topbar-back page-transition-link">Powrót</a></div>{% endblock %}
+{% block nav_user_actions %}{% endblock %}
+{% block content %}
+<div class="page-header page-header-compact"><div class="page-header-content"><span class="page-eyebrow">Administracja</span><h1>Użytkownicy i dostęp</h1><p class="page-description">Widok do kontroli statusu kont, aktywacji e-mail i uprawnień bez przekopywania się przez pełny Django admin.</p></div></div>
+{% include 'paneladmin/includes/subnav.html' %}
+<div class="row g-4 mb-4">
+    <div class="col-xl-8">
+        <div class="table-card p-4 h-100">
+            <div class="goal-header mb-3"><div><h3 class="section-title">Konta w systemie</h3><p class="section-subtitle">Filtrowanie po statusie i wyszukiwarka przyspieszają pracę z większą liczbą kont.</p></div></div>
+            <form method="get" class="row g-3 mb-3 admin-filter-form">
+                <div class="col-md-5"><label class="form-label">Szukaj</label><input type="text" name="q" value="{{ user_filters.q }}" class="form-control" placeholder="login, e-mail, imię lub nazwisko"></div>
+                <div class="col-md-3"><label class="form-label">Status</label><select name="status" class="form-select"><option value="all" {% if user_filters.status == 'all' %}selected{% endif %}>Wszystkie</option><option value="active" {% if user_filters.status == 'active' %}selected{% endif %}>Aktywne</option><option value="inactive" {% if user_filters.status == 'inactive' %}selected{% endif %}>Nieaktywne</option><option value="staff" {% if user_filters.status == 'staff' %}selected{% endif %}>Pracownicy</option><option value="unverified" {% if user_filters.status == 'unverified' %}selected{% endif %}>Niepotwierdzony e-mail</option><option value="new" {% if user_filters.status == 'new' %}selected{% endif %}>Jeszcze bez logowania</option></select></div>
+                <div class="col-md-2"><label class="form-label">Rola</label><select name="role" class="form-select"><option value="all" {% if user_filters.role == 'all' %}selected{% endif %}>Wszystkie</option>{% for code, label in role_form.fields.role.choices %}{% if code %}<option value="{{ code }}" {% if user_filters.role == code %}selected{% endif %}>{{ label }}</option>{% endif %}{% endfor %}</select></div>
+                <div class="col-md-2 d-flex align-items-end gap-2"><button class="btn btn-primary w-100">Filtruj</button><a href="{% url 'paneladmin_users' %}" class="btn btn-outline-secondary">Wyczyść</a></div>
+            </form>
+            <div class="table-responsive">
+                <table class="table align-middle custom-table admin-users-table">
+                    <thead><tr><th>Login</th><th>E-mail</th><th>Uprawnienia</th><th>Dane użytkownika</th><th>Logowanie</th><th></th></tr></thead>
+                    <tbody>
+                    {% for row in all_user_rows %}
+                    <tr>
+                        <td><strong>{{ row.user.username }}</strong><div class="small text-muted">{{ row.user.get_full_name|default:'Brak danych osobowych' }}</div></td>
+                        <td>{{ row.user.email|default:'—' }}</td>
+                        <td>
+                            <div class="small">Rola: {{ row.role.get_role_display|default:'Brak roli' }}</div>
+                            <div class="small">Aktywne: {% if row.user.is_active %}tak{% else %}nie{% endif %} · pracownik: {% if row.user.is_staff %}tak{% else %}nie{% endif %}</div>
+                            <div class="small">E-mail: {% if row.user.email_verified %}potwierdzony{% else %}niepotwierdzony{% endif %}</div>
+                        </td>
+                        <td class="small">Dom: {{ row.user.home_accounts_count }} kont / {{ row.user.operations_count }} operacji<br>Firma: {{ row.user.company_costs_count }} kosztów</td>
+                        <td class="small">Dołączył: {{ row.user.date_joined|date:"Y-m-d H:i" }}<br>Ostatnio: {{ row.user.last_login|date:"Y-m-d H:i"|default:'Brak' }}</td>
+                        <td class="text-end d-flex gap-2 justify-content-end flex-wrap">
+                            {% if can_manage_admin_panel %}{% if row.role %}<a href="?edit_role={{ row.role.id }}&q={{ user_filters.q }}&status={{ user_filters.status }}&role={{ user_filters.role }}" class="btn btn-sm btn-outline-secondary">Rola</a>{% endif %}
+                            <a href="{% url 'admin:auth_user_change' row.user.id %}" class="btn btn-sm btn-outline-primary">Edytuj</a>{% else %}<span class="small text-muted">Podgląd tylko do odczytu</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}<tr><td colspan="6" class="text-muted">Brak użytkowników dla wybranych filtrów.</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if page_obj.paginator.num_pages > 1 %}
+            <div class="d-flex justify-content-between align-items-center mt-3 gap-3 flex-wrap">
+                <div class="small text-muted">Strona {{ page_obj.number }} z {{ page_obj.paginator.num_pages }} · rekordów na stronie: {{ page_obj.paginator.per_page }}</div>
+                <div class="d-flex gap-2">
+                    {% if page_obj.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ user_filters.q }}&status={{ user_filters.status }}&role={{ user_filters.role }}&page={{ page_obj.previous_page_number }}">Poprzednia</a>{% endif %}
+                    {% if page_obj.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ user_filters.q }}&status={{ user_filters.status }}&role={{ user_filters.role }}&page={{ page_obj.next_page_number }}">Następna</a>{% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-xl-4">
+        {% if can_manage_admin_panel %}<div class="form-panel p-4 h-100 mb-4">
+            <div class="goal-header mb-3"><div><h3 class="section-title">Role i dostęp</h3><p class="section-subtitle">Przypisanie roli bez wychodzenia z panelu administratora.</p></div></div>
+            <form method="post" action="{% url 'paneladmin_zapisz_role' %}" class="row g-3">{% csrf_token %}{% if role_edit_instance %}<input type="hidden" name="role_id" value="{{ role_edit_instance.id }}">{% endif %}{% for field in role_form %}<div class="col-12"><label class="form-label">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|striptags }}</div>{% endif %}</div>{% endfor %}<div class="col-12 d-flex gap-2"><button class="btn btn-primary">{{ role_edit_instance|yesno:'Zapisz zmiany,Zapisz rolę' }}</button>{% if role_edit_instance %}<a class="btn btn-outline-secondary" href="{% url 'paneladmin_users' %}">Anuluj</a>{% endif %}</div></form>
+        </div>{% else %}<div class="hero-note mb-4"><h3 class="section-title">Tryb audytowy</h3><p class="page-description mb-0">Ta rola może przeglądać konta i historię zmian, ale nie może zmieniać uprawnień użytkowników.</p></div>{% endif %}
+        <div class="table-card p-4 h-100">
+            <div class="goal-header mb-3"><div><h3 class="section-title">Szybki podgląd</h3><p class="section-subtitle">Najczęstsze grupy użytkowników wymagające sprawdzenia.</p></div></div>
+            <div class="key-value-grid mt-0">
+                <div class="key-value-item"><strong>Wszystkie konta</strong>{{ stats.users }}</div>
+                <div class="key-value-item"><strong>Aktywne konta</strong>{{ stats.active_users }}</div>
+                <div class="key-value-item"><strong>Nieaktywne</strong>{{ system_health.inactive_users }}</div>
+                <div class="key-value-item"><strong>Niepotwierdzony e-mail</strong>{{ system_health.unverified_users }}</div>
+                <div class="key-value-item"><strong>Jeszcze bez logowania</strong>{{ system_health.never_logged_in }}</div>
+                <div class="key-value-item"><strong>Konta pracowników</strong>{{ stats.staff_users }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

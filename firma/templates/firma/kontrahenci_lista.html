@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Kontrahenci - Budżet firmowy{% endblock %}
+{% block brand_name %}Budżet firmowy{% endblock %}
+{% block navbar_class %}firma-navbar{% endblock %}
+
+{% block nav_actions %}
+{% include 'firma/includes/company_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <h1>Kontrahenci</h1>
+        <p class="page-description">Lista kontrahentów używanych w module firmy.</p>
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle custom-table">
+            <thead>
+                <tr>
+                    <th>Nazwa</th>
+                    <th>NIP</th>
+                    <th>REGON</th>
+                    <th>Telefon</th>
+                    <th>E-mail</th>
+                    <th>Adres</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for k in kontrahenci %}
+                    <tr>
+                        <td><strong>{{ k.nazwa }}</strong></td>
+                        <td>{{ k.nip|default:"-" }}</td>
+                        <td>{{ k.regon|default:"-" }}</td>
+                        <td>{{ k.telefon|default:"-" }}</td>
+                        <td>{{ k.email|default:"-" }}</td>
+                        <td>{{ k.adres|default:"-" }}</td>
+                        <td>{{ k.status_rejestru|default:"-" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="table-empty">Brak kontrahentów.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

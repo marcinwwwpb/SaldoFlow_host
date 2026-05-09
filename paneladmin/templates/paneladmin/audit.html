@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Audyt zmian{% endblock %}
+{% block navbar_class %}firma-navbar admin-navbar{% endblock %}
+{% block nav_actions %}<div class="header-actions header-actions-scroll simple-back-nav"><a href="{% url 'module_selector' %}" class="btn btn-topbar btn-topbar-back page-transition-link">Powrót</a></div>{% endblock %}
+{% block nav_user_actions %}{% endblock %}
+{% block content %}
+<div class="page-header page-header-compact"><div class="page-header-content"><span class="page-eyebrow">Administracja</span><h1>Audyt zmian w bazie</h1><p class="page-description">Rejestr istotnych zmian z porównaniem stanu przed i po operacji. To warstwa audytowa do weryfikacji dostępu, korekt danych i działań operatorów.</p></div></div>
+{% include 'paneladmin/includes/subnav.html' %}
+<div class="row g-4 mb-4">
+    <div class="col-lg-4"><div class="table-card p-4 h-100"><div class="goal-header mb-3"><div><h3 class="section-title">Podsumowanie</h3><p class="section-subtitle">Wskaźniki pomagają wyłapać nietypową intensywność zmian.</p></div></div><div class="key-value-grid mt-0"><div class="key-value-item"><strong>Wpisy DB change log</strong>{{ stats.db_changes }}</div><div class="key-value-item"><strong>Wpisy audytu admina</strong>{{ stats.audit }}</div><div class="key-value-item"><strong>Superadministratorzy</strong>{{ role_counts.SUPERADMIN }}</div><div class="key-value-item"><strong>Administratorzy</strong>{{ role_counts.ADMIN }}</div><div class="key-value-item"><strong>Księgowi</strong>{{ role_counts.KSIEGOWY }}</div><div class="key-value-item"><strong>Audytorzy</strong>{{ role_counts.AUDYTOR }}</div></div></div></div>
+    <div class="col-lg-8"><div class="table-card p-4 h-100"><div class="goal-header mb-3"><div><h3 class="section-title">Praktyka dostępu do danych</h3><p class="section-subtitle">W projekcie każdy rekord biznesowy jest filtrowany po właścicielu użytkowniku, a panel administratora wymaga uprawnień pracowniczych lub roli administracyjnej. Dodatkowo Oracle otrzymuje skrypty VPD i audytu na poziomie bazy.</p></div></div><div class="admin-mini-list"><div class="admin-mini-item"><strong>Warstwa aplikacji</strong><span>querysety po user/uzytkownik, wymagane logowanie i kontrola roli</span></div><div class="admin-mini-item"><strong>Warstwa bazy</strong><span>role, oddzielne konta techniczne, polityki VPD i trigger audytowy</span></div><div class="admin-mini-item"><strong>Zmiany istotne</strong><span>INSERT/UPDATE/DELETE dla użytkowników, operacji, faktur, JPK, konfiguracji i importów</span></div></div></div></div>
+</div>
+<div class="table-card p-4">
+    <div class="goal-header mb-3"><div><h3 class="section-title">Ostatnie istotne zmiany</h3><p class="section-subtitle">Pokazujemy tylko zmiany, które mają znaczenie administracyjne lub księgowe.</p></div></div>
+    <div class="table-responsive"><table class="table align-middle custom-table"><thead><tr><th>Czas</th><th>Model</th><th>Operacja</th><th>Zakres</th><th>Zmodyfikowane pola</th><th>Przed / Po</th></tr></thead><tbody>
+        {% for row in db_changes %}
+        <tr>
+            <td class="small">{{ row.changed_at|date:"Y-m-d H:i" }}<br><span class="text-muted">{{ row.actor|default:'system' }}</span></td>
+            <td><strong>{{ row.app_label }}.{{ row.model_name }}</strong><div class="small text-muted">#{{ row.object_pk }} · {{ row.tenant_key }}</div></td>
+            <td><span class="soft-badge {% if row.operation == 'DELETE' %}soft-badge-danger{% endif %}">{{ row.operation }}</span></td>
+            <td class="small">owner_user_id: {{ row.owner_user_id|default:'—' }}<br>źródło: {{ row.source }}</td>
+            <td class="small">{{ row.changed_fields|join:", "|default:'—' }}</td>
+            <td class="small"><div><strong>Przed:</strong> {{ row.before_state|truncatechars:180 }}</div><div class="mt-1"><strong>Po:</strong> {{ row.after_state|truncatechars:180 }}</div></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-muted">Brak zmian do wyświetlenia.</td></tr>
+        {% endfor %}
+    </tbody></table></div>
+</div>
+{% endblock %}

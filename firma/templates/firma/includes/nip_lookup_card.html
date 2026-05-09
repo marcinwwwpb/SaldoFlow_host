@@ -1,0 +1,12 @@
+<div class="hero-note mt-4 ceidg-card">
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center">
+        <div>
+            <h3 class="section-title mb-1">Pobierz dane po NIP</h3>
+            <p class="page-description mb-0">Uzupełnij formularz automatycznie z rejestru CEIDG.</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <button type="button" class="btn btn-outline-primary" id="{{ button_id|default:'nip-lookup-btn' }}" {% if not CEIDG_ENABLED %}disabled{% endif %}>Pobierz dane</button>
+            <span class="small text-muted" id="{{ status_id|default:'nip-lookup-status' }}">{% if CEIDG_ENABLED and CEIDG_DEMO_MODE %}Tryb demonstracyjny: bez tokenu zostaną użyte dane wzorcowe.{% elif not CEIDG_ENABLED %}Usługa chwilowo niedostępna.{% endif %}</span>
+        </div>
+    </div>
+</div>

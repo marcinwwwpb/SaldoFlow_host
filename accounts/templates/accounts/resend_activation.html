@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Wyślij aktywację ponownie — {{ APP_NAME }}{% endblock %}
+{% block body_class %}public-shell{% endblock %}
+{% block brand_name %}Aktywacja e-mail{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="auth-card">
+            <span class="page-eyebrow">Ponowna wysyłka</span>
+            <h1>Wyślij nowy link aktywacyjny</h1>
+            <p class="page-description">Podaj e-mail użyty przy rejestracji. Jeśli konto czeka na aktywację, wyślemy nową wiadomość.</p>
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">{{ form.email.label }}</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors|striptags }}</div>{% endif %}
+                </div>
+                <button class="btn btn-primary w-100">Wyślij ponownie</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

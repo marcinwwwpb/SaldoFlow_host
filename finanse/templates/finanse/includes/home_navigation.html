@@ -1,0 +1,11 @@
+<div class="header-actions header-actions-scroll simple-back-nav">
+    {% if USER_CAN_MANAGE_FINANCE_DATA %}
+        <a href="{% url 'dodaj_operacje' %}" class="btn btn-topbar page-transition-link">Dodaj operację</a>
+        <a href="{% url 'lista_kont' %}" class="btn btn-topbar page-transition-link">Konta</a>
+        <a href="{% url 'centrum_importu_eksportu' %}" class="btn btn-topbar page-transition-link">Import i eksport</a>
+        <a href="{% url 'ustaw_cel' %}" class="btn btn-topbar page-transition-link">Cel oszczędności</a>
+    {% else %}
+        <a href="{% url 'lista_kont' %}" class="btn btn-topbar page-transition-link">Konta</a>
+        <a href="{% url 'centrum_importu_eksportu' %}" class="btn btn-topbar page-transition-link">Eksport danych</a>
+    {% endif %}
+</div>

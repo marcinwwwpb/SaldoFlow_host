@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Budżet firmowy{% endblock %}
+{% block brand_name %}Budżet firmowy{% endblock %}
+
+{% block nav_actions %}
+{% include 'firma/includes/company_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-compact">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Firma</span>
+        <h1>Panel rozliczeń {{ rok }}</h1>
+        <p class="page-description mb-0">
+            Jedno miejsce do prowadzenia kosztów, sprzedaży, JPK, kontrahentów i importów demona.
+        </p>
+    </div>
+
+    <div class="info-card compact-year-card">
+        <form method="get" class="quick-filter-form quick-filter-form-compact">
+            <label for="rok" class="form-label mb-2">Rok</label>
+            <select name="rok" id="rok" class="form-select year-select-mini" onchange="this.form.submit()">
+                {% for r in lata %}
+                    <option value="{{ r }}" {% if r == rok %}selected{% endif %}>{{ r }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card summary-card metric-card-income h-100">
+            <div class="card-body">
+                <div class="metric-label">Przychody opłacone</div>
+                <div class="summary-value">{{ przychod|floatformat:2 }} PLN</div>
+                <div class="summary-meta">Wpływy z faktur oznaczonych jako opłacone</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card summary-card metric-card-expense h-100">
+            <div class="card-body">
+                <div class="metric-label">Koszty</div>
+                <div class="summary-value">{{ koszty|floatformat:2 }} PLN</div>
+                <div class="summary-meta">Łączna wartość dokumentów kosztowych</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card summary-card metric-card-balance h-100">
+            <div class="card-body">
+                <div class="metric-label">Bilans</div>
+                <div class="summary-value">{{ dochod|floatformat:2 }} PLN</div>
+                <div class="summary-meta">Różnica między przychodami a kosztami</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-5">
+        <div class="table-card h-100">
+            <div class="goal-header mb-3">
+                <div>
+                    <h3 class="section-title">Gotowość JPK</h3>
+                </div>
+                <span class="soft-badge">{{ gotowe_miesiace }}/12 gotowych</span>
+            </div>
+
+            <div class="jpk-progress-shell mb-4">
+                <div class="jpk-progress-top">
+                    <strong>Postęp rozliczeń</strong>
+                    <span>{{ jpk_progres }}%</span>
+                </div>
+                <div class="goal-progress-wrapper">
+                    <div class="goal-progress-bar" style="width: {{ jpk_progres }}%;">{{ jpk_progres }}%</div>
+                </div>
+            </div>
+
+            <div class="key-value-grid mt-0">
+                <div class="key-value-item">
+                    <strong>Miesiące z deklaracją</strong>
+                    {{ miesiace_z_deklaracja }}
+                </div>
+                <div class="key-value-item">
+                    <strong>Miesiące z kosztami JPK</strong>
+                    {{ miesiace_z_kosztami_jpk }}
+                </div>
+                <div class="key-value-item">
+                    <strong>Do uzupełnienia</strong>
+                    {{ pozostale_miesiace }}
+                </div>
+                <div class="key-value-item">
+                    <strong>Szybkie akcje</strong>
+                    <a href="{% url 'deklaracja_jpk' %}?rok={{ rok }}" class="link-primary text-decoration-none">Uzupełnij deklarację</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="table-card h-100">
+            <div class="goal-header mb-3">
+                <div>
+                    <h3 class="section-title">Miesiące i statusy</h3>
+                </div>
+            </div>
+
+            <div class="months-workspace">
+                {% for miesiac in miesiace %}
+                    <a href="{% url 'firma_miesiac_detail' rok miesiac.nr %}" class="month-work-item page-transition-link status-{{ miesiac.status_kod }}">
+                        <div class="month-work-head">
+                            <div>
+                                <div class="month-name">{{ miesiac.nazwa }}</div>
+                                <div class="month-subtitle">Miesiąc {{ miesiac.nr }}</div>
+                            </div>
+                            <span class="month-status-pill">{{ miesiac.status_etykieta }}</span>
+                        </div>
+                        <p class="month-status-text">{{ miesiac.status_opis }}</p>
+                        <div class="month-work-metrics">
+                            <span>Przychód <strong>{{ miesiac.przychod|floatformat:2 }} PLN</strong></span>
+                            <span>Koszty <strong>{{ miesiac.koszt|floatformat:2 }} PLN</strong></span>
+                            <span>Bilans <strong class="{% if miesiac.bilans >= 0 %}text-success{% else %}text-danger{% endif %}">{{ miesiac.bilans|floatformat:2 }} PLN</strong></span>
+                        </div>
+                        <div class="month-work-footer">
+                            <span>Pozycji JPK: {{ miesiac.liczba_kosztow }}</span>
+                            <span>Otwórz szczegóły →</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

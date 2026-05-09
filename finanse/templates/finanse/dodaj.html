@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Dodaj operację - Budżet domowy{% endblock %}
+{% block brand_name %}Budżet domowy{% endblock %}
+
+{% block nav_actions %}
+{% include 'finanse/includes/home_navigation.html' %}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Nowa operacja</span>
+        <h1>Dodaj pozycję w budżecie</h1>
+        <p class="page-description">
+            Uzupełnij podstawowe dane operacji, przypisz kategorię i opcjonalnie dodaj tagi oraz opis.
+        </p>
+    </div>
+</div>
+
+<div class="form-panel">
+    <form method="post" class="app-form">
+        {% csrf_token %}
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label class="form-label">{{ form.konto.label }}</label>
+                {{ form.konto }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">{{ form.tytul.label }}</label>
+                {{ form.tytul }}
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">{{ form.kwota.label }}</label>
+                {{ form.kwota }}
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">{{ form.data.label }}</label>
+                {{ form.data }}
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">{{ form.typ_operacji.label }}</label>
+                {{ form.typ_operacji }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">{{ form.kategoria.label }}</label>
+                {{ form.kategoria }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">{{ form.tagi.label }}</label>
+                {{ form.tagi }}
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">{{ form.opis.label }}</label>
+                {{ form.opis }}
+            </div>
+        </div>
+
+        <div class="form-actions mt-4">
+            <button class="btn btn-success">Zapisz operację</button>
+            <a href="{% url 'lista_miesiecy' %}" class="btn btn-secondary page-transition-link">Anuluj</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/pl.js"></script>
+<script>
+    flatpickr("#datepicker", {
+        dateFormat: "Y-m-d",
+        defaultDate: "today",
+        locale: "pl"
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}{{ nazwa_miesiaca }} {{ rok }} - Budżet domowy{% endblock %}
+{% block brand_name %}Budżet domowy{% endblock %}
+
+{% block nav_actions %}
+{% include 'finanse/includes/home_navigation.html' %}
+{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-compact">
+    <div class="page-header-content">
+        <h1>{{ nazwa_miesiaca }} {{ rok }}</h1>
+    </div>
+
+    <div class="info-card compact-year-card">
+        <span class="soft-badge">{{ operacje|length }} operacji</span>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card summary-card metric-card-income h-100">
+            <div class="card-body">
+                <div class="metric-label">Przychody</div>
+                <div class="summary-value">{{ przychody|floatformat:2 }} PLN</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card summary-card metric-card-expense h-100">
+            <div class="card-body">
+                <div class="metric-label">Wydatki</div>
+                <div class="summary-value">{{ wydatki|floatformat:2 }} PLN</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card summary-card metric-card-balance h-100">
+            <div class="card-body">
+                <div class="metric-label">Saldo</div>
+                <div class="summary-value">{{ saldo|floatformat:2 }} PLN</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-5">
+        <div class="chart-card h-100">
+            <div class="goal-header mb-3">
+                <div>
+                    <h3 class="section-title">Wydatki według kategorii</h3>
+                </div>
+            </div>
+            <div class="chart-pie-wrap">
+                <canvas id="chart_kategorie"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="form-panel h-100">
+            <div class="goal-header mb-3">
+                <div>
+                    <h3 class="section-title">Wyszukiwanie operacji</h3>
+                </div>
+            </div>
+
+            <form method="get" class="quick-filter-form search-input-wrap">
+                <div class="input-group">
+                    <input
+                        type="text"
+                        name="q"
+                        class="form-control"
+                        placeholder="Szukaj operacji po tytule"
+                        value="{{ q }}"
+                    >
+                    <button class="btn btn-primary">Szukaj</button>
+                </div>
+                {% if q %}
+                    <a href="{% url 'miesiac_detail' rok miesiac %}" class="btn btn-secondary page-transition-link mt-2">
+                        Wyczyść filtr
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="table-card">
+    <div class="goal-header mb-3">
+        <div>
+            <h3 class="section-title">Lista operacji</h3>
+        </div>
+        {% if q %}
+            <span class="filter-chip">Filtr: {{ q }}</span>
+        {% endif %}
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped align-middle custom-table">
+            <thead>
+                <tr>
+                    <th>Tytuł</th>
+                    <th>Kwota</th>
+                    <th>Data</th>
+                    <th>Kategoria</th>
+                    <th>Typ</th>
+                    <th>Opis</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in operacje %}
+                    <tr>
+                        <td><strong>{{ o.tytul }}</strong></td>
+                        <td class="table-amount {% if o.typ_operacji.nazwa|lower == 'przychod' %}positive{% else %}negative{% endif %}">
+                            {{ o.kwota|floatformat:2 }} PLN
+                        </td>
+                        <td>{{ o.data }}</td>
+                        <td>{{ o.kategoria }}</td>
+                        <td>{{ o.typ_operacji }}</td>
+                        <td>{{ o.opis|default:"—" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="table-empty">Brak operacji w tym miesiącu.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ labels|json_script:"detail-labels-data" }}
+{{ values|json_script:"detail-values-data" }}
+
+<script>
+    const detailLabels = JSON.parse(document.getElementById("detail-labels-data").textContent);
+    const detailValues = JSON.parse(document.getElementById("detail-values-data").textContent);
+
+    const detailChartEl = document.getElementById("chart_kategorie");
+    if (detailChartEl) {
+        new Chart(detailChartEl, {
+            type: "doughnut",
+            data: {
+                labels: detailLabels,
+                datasets: [{
+                    data: detailValues,
+                    backgroundColor: [
+                        "#1f6feb",
+                        "#46d7a4",
+                        "#ffb648",
+                        "#ff6f7f",
+                        "#8f78ff",
+                        "#40b6f5",
+                        "#4ed4c8"
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "56%",
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            boxWidth: 12,
+                            boxHeight: 12,
+                            usePointStyle: true,
+                            padding: 14,
+                            color: "#42516a",
+                            font: {
+                                size: 13,
+                                weight: "600"
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

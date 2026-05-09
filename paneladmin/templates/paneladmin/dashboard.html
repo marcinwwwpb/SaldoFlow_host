@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Panel zarządzania{% endblock %}
+{% block navbar_class %}firma-navbar admin-navbar{% endblock %}
+{% block nav_actions %}<div class="header-actions header-actions-scroll simple-back-nav"><a href="{% url 'module_selector' %}" class="btn btn-topbar btn-topbar-back page-transition-link">Powrót</a></div>{% endblock %}
+{% block nav_user_actions %}{% endblock %}
+{% block content %}
+<div class="page-header page-header-compact admin-page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Administracja</span>
+        <h1>Panel administratora</h1>
+        <p class="page-description">Widok startowy zebrany wokół kont użytkowników, jakości danych i procesów wymagających reakcji.</p>
+    </div>
+</div>
+{% include 'paneladmin/includes/subnav.html' %}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3"><div class="card summary-card metric-card-income h-100"><div class="card-body"><div class="metric-label">Użytkownicy</div><div class="summary-value">{{ stats.users }}</div><div class="summary-meta">Aktywne: {{ stats.active_users }} · pracownicy: {{ stats.staff_users }}</div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card summary-card metric-card-balance h-100"><div class="card-body"><div class="metric-label">Budżet domowy</div><div class="summary-value">{{ stats.operacje }}</div><div class="summary-meta">Operacje: {{ stats.operacje }} · konta: {{ stats.konta }}</div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card summary-card metric-card-expense h-100"><div class="card-body"><div class="metric-label">Budżet firmowy</div><div class="summary-value">{{ stats.faktury_kosztowe }}</div><div class="summary-meta">Koszty: {{ stats.faktury_kosztowe }} · sprzedaż: {{ stats.faktury_sprzedazy }}</div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card summary-card metric-card-neutral h-100"><div class="card-body"><div class="metric-label">Procesy w tle</div><div class="summary-value">{{ stats.importy_ok }}</div><div class="summary-meta">Importy poprawne: {{ stats.importy_ok }} · błędy: {{ stats.importy_blad }}</div></div></div></div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-8">
+        <div class="table-card p-4 h-100">
+            <div class="goal-header mb-3"><div><h3 class="section-title">Konta wymagające uwagi</h3><p class="section-subtitle">Na starcie pokazujemy tylko przypadki, które zwykle wymagają reakcji administratora.</p></div><a href="{% url 'paneladmin_users' %}" class="btn btn-outline-primary btn-sm page-transition-link">Przejdź do użytkowników</a></div>
+            <div class="table-responsive">
+                <table class="table align-middle custom-table admin-users-table">
+                    <thead><tr><th>Użytkownik</th><th>Status konta</th><th>Aktywacja e-mail</th><th>Aktywność</th><th></th></tr></thead>
+                    <tbody>
+                    {% for row in flagged_user_rows %}
+                    <tr>
+                        <td>
+                            <strong>{{ row.user.username }}</strong>
+                            <div class="small text-muted">{{ row.user.email|default:'Brak adresu e-mail' }}</div>
+                        </td>
+                        <td>
+                            {% if row.user.is_active %}<span class="soft-badge">Aktywne</span>{% else %}<span class="soft-badge soft-badge-danger">Wyłączone</span>{% endif %}
+                            {% if row.user.is_staff %}<span class="soft-badge">Pracownik</span>{% endif %}
+                            <div class="small text-muted mt-1">{{ row.role.get_role_display|default:'Bez przypisanej roli' }}</div>
+                        </td>
+                        <td>
+                            {% if row.user.email_verified %}
+                                <span class="status-inline status-ok">Potwierdzony</span>
+                            {% else %}
+                                <span class="status-inline status-warning">Do potwierdzenia</span>
+                            {% endif %}
+                        </td>
+                        <td class="small">
+                            {% if row.user.last_login %}Ostatnio: {{ row.user.last_login|date:"Y-m-d H:i" }}{% else %}Jeszcze bez logowania{% endif %}<br>
+                            Dom: {{ row.user.home_accounts_count }} kont · Firma: {{ row.user.company_costs_count }} kosztów
+                        </td>
+                        <td class="text-end"><a href="{% url 'admin:auth_user_change' row.user.id %}" class="btn btn-sm btn-outline-primary page-transition-link">Edytuj</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-muted">Brak kont wymagających uwagi.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="table-card p-4 h-100">
+            <div class="goal-header mb-3"><div><h3 class="section-title">Stan systemu</h3><p class="section-subtitle">Najważniejsze liczby operacyjne bez przechodzenia do wielu sekcji.</p></div></div>
+            <div class="key-value-grid mt-0">
+                <div class="key-value-item"><strong>Potwierdzone e-maile</strong>{{ system_health.verified_emails }}</div>
+                <div class="key-value-item"><strong>Nieaktywne konta</strong>{{ system_health.inactive_users }}</div>
+                <div class="key-value-item"><strong>Bez logowania</strong>{{ system_health.never_logged_in }}</div>
+                <div class="key-value-item"><strong>Niepotwierdzone e-maile</strong>{{ system_health.unverified_users }}</div>
+                <div class="key-value-item"><strong>Suma operacji domowych</strong>{{ system_health.home_balance_sum|floatformat:2 }} PLN</div>
+                <div class="key-value-item"><strong>Suma kosztów firmowych</strong>{{ system_health.company_costs_sum|floatformat:2 }} PLN</div>
+                <div class="key-value-item"><strong>Suma sprzedaży</strong>{{ system_health.company_sales_sum|floatformat:2 }} PLN</div>
+                <div class="key-value-item"><strong>Wpisy audytu</strong>{{ stats.audit }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    {% for item in shortcuts %}
+    <div class="col-lg-4">
+        <div class="table-card p-4 h-100 admin-shortcut-card">
+            <div class="goal-header mb-3"><div><h3 class="section-title">{{ item.title }}</h3><p class="section-subtitle">{{ item.description }}</p></div></div>
+            <div class="text-muted small mb-3">{{ item.meta }}</div>
+            <a href="{% url item.url %}" class="btn btn-outline-primary page-transition-link">Otwórz sekcję</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6"><div class="table-card p-4 h-100"><div class="goal-header mb-3"><div><h3 class="section-title">Ostatnie działania administracyjne</h3><p class="section-subtitle">Zmiany wykonane ręcznie w danych i uprawnieniach.</p></div></div><div class="admin-mini-list">{% for row in ostatnie_audyty %}<div class="admin-mini-item"><strong>{{ row.module }} · {{ row.entity_type }}</strong><span>{{ row.get_action_display }} · {{ row.actor|default:'system' }} · {{ row.created_at|date:"Y-m-d H:i" }}</span></div>{% empty %}<div class="text-muted">Brak wpisów audytu.</div>{% endfor %}</div></div></div>
+    <div class="col-lg-6"><div class="table-card p-4 h-100"><div class="goal-header mb-3"><div><h3 class="section-title">Ostatnie importy i alerty</h3><p class="section-subtitle">Podgląd procesów w tle bez obciążania ekranu startowego zbyt dużą liczbą tabel.</p></div><a href="{% url 'paneladmin_demon' %}" class="btn btn-outline-primary btn-sm page-transition-link">Procesy w tle</a></div><div class="admin-mini-list">{% for row in ostatnie_importy %}<div class="admin-mini-item"><strong>{{ row.nazwa_pliku }}</strong><span>{{ row.user|default:'system' }} · {{ row.status }} · rekordy: {{ row.liczba_rekordow }} / błędy: {{ row.liczba_bledow }}</span></div>{% empty %}<div class="text-muted">Brak importów.</div>{% endfor %}{% for row in ostatnie_logi|slice:":5" %}<div class="admin-mini-item"><strong>{{ row.modul }} · {{ row.poziom }}</strong><span>{{ row.utworzono_o|date:"Y-m-d H:i" }} · {{ row.wiadomosc|truncatechars:90 }}</span></div>{% endfor %}</div></div></div>
+</div>
+{% endblock %}

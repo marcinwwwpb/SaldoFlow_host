@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Import CSV - Budżet domowy{% endblock %}
+{% block brand_name %}Budżet domowy{% endblock %}
+
+{% block nav_actions %}
+{% include 'finanse/includes/home_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Import danych</span>
+        <h1>Import danych z CSV</h1>
+        <p class="page-description">
+            Wgraj plik z historią operacji, aby szybko uzupełnić budżet domowy bez ręcznego wpisywania rekordów.
+        </p>
+    </div>
+</div>
+
+<div class="row g-4 align-items-stretch">
+    <div class="col-lg-7">
+        <div class="form-panel h-100">
+            <form method="post" enctype="multipart/form-data" class="app-form">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Plik CSV</label>
+                    <input type="file" name="plik" class="form-control" accept=".csv,text/csv" required>
+                </div>
+
+                <div class="form-actions mt-4">
+                    <button class="btn btn-primary">Importuj plik</button>
+                    <a href="{% url 'lista_miesiecy' %}" class="btn btn-secondary page-transition-link">Anuluj</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="hero-note h-100">
+            <h3 class="section-title">Format pliku</h3>
+            <p class="page-description mt-2">
+                Aplikacja oczekuje pliku z nagłówkami w określonej kolejności. Dzięki temu import jest przewidywalny i łatwiejszy do poprawienia w razie błędów.
+            </p>
+
+            <div class="key-value-grid mt-4">
+                <div class="key-value-item"><strong>Kolumny</strong>Data, Tytuł, Kwota, Typ</div>
+                <div class="key-value-item"><strong>Dodatkowe pola</strong>Kategoria, Tagi, Opis</div>
+                <div class="key-value-item"><strong>Format</strong>CSV UTF-8</div>
+                <div class="key-value-item"><strong>Tip</strong>Najpierw zrób eksport i użyj go jako wzoru</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

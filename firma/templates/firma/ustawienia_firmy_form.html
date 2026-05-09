@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Ustawienia firmy - Finanse firmowe{% endblock %}
+{% block brand_name %}Finanse firmowe{% endblock %}
+{% block navbar_class %}firma-navbar{% endblock %}
+
+{% block nav_actions %}
+{% include 'firma/includes/company_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Konfiguracja</span>
+        <h1>Ustawienia firmy</h1>
+        <p class="page-description">Te dane są używane przy przygotowaniu eksportu JPK i mogą zostać uzupełnione po NIP z CEIDG.</p>
+    </div>
+</div>
+
+<div class="form-panel">
+    <form method="post" class="app-form">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">{{ form.nazwa_firmy.label_tag }}{{ form.nazwa_firmy }}</div>
+            <div class="col-md-6">{{ form.wlasciciel.label_tag }}{{ form.wlasciciel }}</div>
+            <div class="col-md-4">{{ form.nip.label_tag }}{{ form.nip }}</div>
+            <div class="col-md-4">{{ form.kod_urzedu_skarbowego.label_tag }}{{ form.kod_urzedu_skarbowego }}</div>
+            <div class="col-md-4 d-flex align-items-end">{{ form.forma_opodatkowania.label_tag }}{{ form.forma_opodatkowania }}</div>
+            <div class="col-12">{{ form.adres.label_tag }}{{ form.adres }}</div>
+            <div class="col-md-4">{{ form.typ_zus.label_tag }}{{ form.typ_zus }}</div>
+            <div class="col-md-4 d-flex align-items-center pt-4"><div class="form-check">{{ form.vat_czynny }} <label class="form-check-label" for="{{ form.vat_czynny.id_for_label }}">{{ form.vat_czynny.label }}</label></div></div>
+            <div class="col-md-4 d-flex align-items-center pt-4"><div class="form-check">{{ form.czy_chorobowe }} <label class="form-check-label" for="{{ form.czy_chorobowe.id_for_label }}">{{ form.czy_chorobowe.label }}</label></div></div>
+        </div>
+
+        {% include 'firma/includes/nip_lookup_card.html' with button_id='ceidg-ustawienia-btn' status_id='ceidg-ustawienia-status' %}
+
+        <div class="form-actions mt-4">
+            <button class="btn btn-success">Zapisz</button>
+            <a href="{% url 'firma_dashboard' %}" class="btn btn-secondary page-transition-link">Powrót</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include 'firma/includes/nip_lookup_script.html' with button_id='ceidg-ustawienia-btn' status_id='ceidg-ustawienia-status' nip_field_id='id_nip' name_field_id='id_nazwa_firmy' nip_target_field_id='id_nip' address_field_id='id_adres' owner_field_id='id_wlasciciel' %}
+{% endblock %}

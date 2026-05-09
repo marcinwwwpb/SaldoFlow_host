@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Logowanie — {{ APP_NAME }}{% endblock %}
+{% block body_class %}public-shell{% endblock %}
+{% block content %}
+<div class="auth-grid">
+    <section class="auth-card auth-card-clean">
+        <span class="page-eyebrow">Konto użytkownika</span>
+        <h1>Zaloguj się</h1>
+        <p class="page-description">Użyj adresu e-mail i hasła, aby przejść do centrum finansów.</p>
+        <form method="post" class="app-form mt-4">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="mb-3">
+                <label class="form-label" for="id_username">{{ form.username.label }}</label>
+                {{ form.username }}
+                {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="id_password">{{ form.password.label }}</label>
+                {{ form.password }}
+                {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors|striptags }}</div>{% endif %}
+            </div>
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            <button class="btn btn-primary w-100">Zaloguj się</button>
+        </form>
+        <div class="account-links">
+            <a href="{% url 'accounts_register' %}" class="btn btn-outline-primary page-transition-link">Załóż konto</a>
+            <a href="{% url 'accounts_resend_activation' %}" class="btn btn-outline-secondary page-transition-link">Wyślij aktywację ponownie</a>
+        </div>
+    </section>
+
+    <aside class="checklist-card checklist-card-clean">
+        <span class="soft-badge">Szybki start</span>
+        <ul class="checklist mt-3">
+            <li class="done"><span>Tworzysz konto</span><span class="checkmark">1</span></li>
+            <li class="done"><span>Potwierdzasz adres e-mail</span><span class="checkmark">2</span></li>
+            <li class="done"><span>Przechodzisz do budżetu domowego lub firmy</span><span class="checkmark">3</span></li>
+        </ul>
+        <p class="mt-3 small text-muted">Do działania wysyłki wystarczy uzupełnić dane nadawcy i SMTP w pliku <code>.env</code>.</p>
+    </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Django / local
+.env
+db.sqlite3
+*.sqlite3
+staticfiles/
+media/
+
+# Runtime
+runtime/emails/*
+runtime/daemon_status/*
+runtime/logs/*
+!runtime/emails/.gitkeep
+!runtime/daemon_status/.gitkeep
+!runtime/logs/.gitkeep
+
+# Tests / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# System / IDE
+.DS_Store
+.idea/
+.vscode/

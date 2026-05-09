@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Import i eksport - Budżet domowy{% endblock %}
+
+{% block nav_actions %}
+{% include 'finanse/includes/home_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-compact">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Operacje na danych</span>
+        <h1>Import i eksport budżetu domowego</h1>
+        <p class="page-description">Wybierz bezpieczny sposób wymiany danych. Zamiast menu rozwijanego używamy osobnego ekranu, żeby wszystkie opcje były czytelne także na mniejszych ekranach.</p>
+    </div>
+</div>
+
+<div class="module-grid module-grid-modern">
+    <article class="module-card module-card-clean">
+        <div class="module-card-head">
+            <div>
+                <span class="soft-badge">Import</span>
+                <h3 class="mt-3">Import CSV</h3>
+                <p>Dodaj operacje z arkusza lub eksportu z innego systemu.</p>
+            </div>
+            <span class="module-icon">📥</span>
+        </div>
+        <a href="{% url 'import_csv' %}" class="btn btn-primary page-transition-link {% if not USER_CAN_MANAGE_FINANCE_DATA %}disabled{% endif %}">Przejdź do importu CSV</a>
+    </article>
+
+    <article class="module-card module-card-clean">
+        <div class="module-card-head">
+            <div>
+                <span class="soft-badge">Import</span>
+                <h3 class="mt-3">Import XML</h3>
+                <p>Załaduj operacje z formatu XML zachowującego kategorie i tagi.</p>
+            </div>
+            <span class="module-icon">🧾</span>
+        </div>
+        <a href="{% url 'import_xml' %}" class="btn btn-primary page-transition-link {% if not USER_CAN_MANAGE_FINANCE_DATA %}disabled{% endif %}">Przejdź do importu XML</a>
+    </article>
+
+    <article class="module-card module-card-clean">
+        <div class="module-card-head">
+            <div>
+                <span class="soft-badge">Eksport</span>
+                <h3 class="mt-3">Eksport CSV</h3>
+                <p>Pobierz zestaw operacji w prostym formacie do dalszej analizy.</p>
+            </div>
+            <span class="module-icon">📤</span>
+        </div>
+        <a href="{% url 'eksport_csv' %}" class="btn btn-outline-primary page-transition-link">Pobierz CSV</a>
+    </article>
+
+    <article class="module-card module-card-clean">
+        <div class="module-card-head">
+            <div>
+                <span class="soft-badge">Eksport</span>
+                <h3 class="mt-3">Eksport XML</h3>
+                <p>Pobierz pełny eksport z metadanymi, kontami i tagami.</p>
+            </div>
+            <span class="module-icon">🗂️</span>
+        </div>
+        <a href="{% url 'eksport_xml' %}" class="btn btn-outline-primary page-transition-link">Pobierz XML</a>
+    </article>
+</div>
+
+{% if not USER_CAN_MANAGE_FINANCE_DATA %}
+<div class="hero-note mt-4">
+    <h4 class="section-title">Tryb tylko do odczytu</h4>
+    <p class="page-description mb-0">Twoja rola pozwala przeglądać i eksportować dane, ale nie dodawać ani importować nowych rekordów.</p>
+</div>
+{% endif %}
+{% endblock %}

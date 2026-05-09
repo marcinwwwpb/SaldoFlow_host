@@ -1,0 +1,16 @@
+[Unit]
+Description=SaldoFlow daemon firmowy
+After=network.target
+
+[Service]
+Type=simple
+User=marcin
+WorkingDirectory=/home/marcin/Pulpit/SaldoFlow
+EnvironmentFile=/home/marcin/Pulpit/SaldoFlow/.env
+Environment=DAEMON_IMPORT_USER=test
+ExecStart=/home/marcin/Pulpit/SaldoFlow/demon/import_watchd /home/marcin/Pulpit/SaldoFlow/runtime/watch/firma /home/marcin/Pulpit/SaldoFlow/.venv/bin/python /home/marcin/Pulpit/SaldoFlow/manage.py test --module firma --status-dir /home/marcin/Pulpit/SaldoFlow/runtime/daemon_status --archive-ok /home/marcin/Pulpit/SaldoFlow/runtime/archive/firma/ok --archive-error /home/marcin/Pulpit/SaldoFlow/runtime/archive/firma/error --foreground
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Dodaj kontrahenta - Finanse firmowe{% endblock %}
+{% block brand_name %}Finanse firmowe{% endblock %}
+{% block navbar_class %}firma-navbar{% endblock %}
+
+{% block nav_actions %}
+{% include 'firma/includes/company_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Nowy rekord</span>
+        <h1>Dodaj kontrahenta</h1>
+        <p class="page-description">Uzupełnij dane kontrahenta lub pobierz je po NIP.</p>
+    </div>
+</div>
+
+<div class="form-panel">
+    <form method="post" class="app-form">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">{{ form.nazwa.label_tag }}{{ form.nazwa }}</div>
+            <div class="col-md-6">{{ form.nip.label_tag }}{{ form.nip }}</div>
+            <div class="col-md-6">{{ form.regon.label_tag }}{{ form.regon }}</div>
+            <div class="col-md-6">{{ form.status_rejestru.label_tag }}{{ form.status_rejestru }}</div>
+            <div class="col-12">{{ form.adres.label_tag }}{{ form.adres }}</div>
+            <div class="col-md-4">{{ form.email.label_tag }}{{ form.email }}</div>
+            <div class="col-md-4">{{ form.telefon.label_tag }}{{ form.telefon }}</div>
+            <div class="col-md-4">{{ form.strona_www.label_tag }}{{ form.strona_www }}</div>
+        </div>
+
+        {% include 'firma/includes/nip_lookup_card.html' with button_id='ceidg-kontrahent-btn' status_id='ceidg-kontrahent-status' %}
+
+        <div class="form-actions mt-4">
+            <button class="btn btn-success">Zapisz</button>
+            <a href="{% url 'kontrahenci' %}" class="btn btn-secondary page-transition-link">Anuluj</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include 'firma/includes/nip_lookup_script.html' with button_id='ceidg-kontrahent-btn' status_id='ceidg-kontrahent-status' nip_field_id='id_nip' name_field_id='id_nazwa' nip_target_field_id='id_nip' regon_field_id='id_regon' address_field_id='id_adres' email_field_id='id_email' phone_field_id='id_telefon' www_field_id='id_strona_www' status_field_id='id_status_rejestru' %}
+{% endblock %}

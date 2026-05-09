@@ -1,0 +1,77 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div class="sf-admin-dashboard-intro">
+    <h1>Administracja systemu</h1>
+    <p>Start podzielony na obszary pracy, z szybkimi przejściami do kont użytkowników, danych finansowych i elementów systemowych.</p>
+</div>
+
+<div class="sf-admin-hero-links">
+    <a href="{% url 'paneladmin_dashboard' %}" class="sf-admin-hero-link">Panel administratora aplikacji</a>
+    <a href="{% url 'paneladmin_users' %}" class="sf-admin-hero-link">Podgląd kont użytkowników</a>
+    <a href="{% url 'paneladmin_demon' %}" class="sf-admin-hero-link">Procesy w tle</a>
+    <a href="{% url 'module_selector' %}" class="sf-admin-hero-link">Powrót do {{ APP_NAME|default:"SaldoFlow" }}</a>
+</div>
+
+<div class="sf-admin-grid">
+    <section class="sf-admin-card">
+        <h2>Użytkownicy i dostęp</h2>
+        <ul class="sf-admin-model-links">
+            {% for app in app_list %}
+                {% if app.app_label == 'auth' or app.app_label == 'accounts' %}
+                    {% for model in app.models %}
+                        <li><a href="{{ model.admin_url }}">{{ model.name }}</a></li>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            <li><a href="{% url 'paneladmin_users' %}">Podgląd kont z informacjami administracyjnymi</a></li>
+        </ul>
+    </section>
+
+    <section class="sf-admin-card">
+        <h2>Budżet domowy</h2>
+        <ul class="sf-admin-model-links">
+            {% for app in app_list %}
+                {% if app.app_label == 'finanse' %}
+                    {% for model in app.models %}
+                        <li><a href="{{ model.admin_url }}">{{ model.name }}</a></li>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="sf-admin-card">
+        <h2>Budżet firmowy</h2>
+        <ul class="sf-admin-model-links">
+            {% for app in app_list %}
+                {% if app.app_label == 'firma' %}
+                    {% for model in app.models %}
+                        <li><a href="{{ model.admin_url }}">{{ model.name }}</a></li>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="sf-admin-card">
+        <h2>System i archiwum</h2>
+        <ul class="sf-admin-model-links">
+            {% for app in app_list %}
+                {% if app.app_label == 'paneladmin' %}
+                    {% for model in app.models %}
+                        <li><a href="{{ model.admin_url }}">{{ model.name }}</a></li>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            <li><a href="{% url 'paneladmin_demon' %}">Monitorowanie procesów w tle</a></li>
+        </ul>
+    </section>
+</div>
+
+{% if app_list %}
+<div class="sf-admin-secondary mt-4">
+    {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,10 @@
+Cześć {{ user.first_name|default:user.username }},
+
+Dziękujemy za rejestrację w {{ app_name }}.
+{{ app_tagline }}
+
+Aktywuj konto klikając w link:
+{{ activation_url }}
+
+Link jest ważny przez 48 godzin.
+Jeśli to nie Ty tworzyłeś konto, zignoruj tę wiadomość.

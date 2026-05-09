@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Budżet domowy{% endblock %}
+{% block brand_name %}Budżet domowy{% endblock %}
+
+{% block nav_actions %}
+{% include 'finanse/includes/home_navigation.html' %}
+{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-compact">
+    <div class="page-header-content">
+        <h1>Finanse {{ rok }}</h1>
+    </div>
+
+    <div class="info-card compact-year-card">
+        <form method="get" class="quick-filter-form quick-filter-form-compact">
+            <select
+                name="rok"
+                id="rok"
+                class="form-select year-select-mini"
+                onchange="this.form.submit()"
+            >
+                {% for r in lata %}
+                    <option value="{{ r }}" {% if r == rok %}selected{% endif %}>{{ r }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card summary-card metric-card-income h-100">
+            <div class="card-body">
+                <div class="metric-label">Przychody</div>
+                <div class="summary-value">{{ przychody_rok|floatformat:2 }} PLN</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card summary-card metric-card-expense h-100">
+            <div class="card-body">
+                <div class="metric-label">Wydatki</div>
+                <div class="summary-value">{{ wydatki_rok|floatformat:2 }} PLN</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card summary-card metric-card-balance h-100">
+            <div class="card-body">
+                <div class="metric-label">Oszczędności</div>
+                <div class="summary-value">{{ oszczednosci|floatformat:2 }} PLN</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="chart-card h-100">
+            <div class="goal-header mb-3">
+                <div>
+                    <h3 class="section-title">Ruchy miesięczne</h3>
+                    <p class="section-subtitle">Porównanie przychodów i wydatków w skali roku.</p>
+                </div>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="chart_miesiace"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="goal-card h-100">
+            <div class="goal-header">
+                <div>
+                    <h3 class="section-title">Cel oszczędnościowy</h3>
+                    <p class="section-subtitle">Roczny plan oszczędzania.</p>
+                </div>
+                <span class="soft-badge">{{ rok }}</span>
+            </div>
+
+            {% if cel %}
+                <div class="goal-amount">{{ cel.kwota_docelowa|floatformat:2 }} PLN</div>
+                <p class="goal-meta">
+                    Aktualnie odłożono <strong>{{ oszczednosci|floatformat:2 }} PLN</strong>.
+                </p>
+
+                <div class="progress custom-progress mt-3">
+                    <div
+                        class="progress-bar"
+                        role="progressbar"
+                        style="width: {% if procent is not None %}{{ procent }}{% else %}0{% endif %}%;"
+                        aria-valuenow="{% if procent is not None %}{{ procent }}{% else %}0{% endif %}"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                    >
+                        {% if procent is not None %}{{ procent }}%{% else %}0%{% endif %}
+                    </div>
+                </div>
+
+                <a href="{% url 'ustaw_cel' %}" class="btn btn-outline-primary mt-4 page-transition-link">
+                    Zmień cel
+                </a>
+            {% else %}
+                <p class="page-description mt-2">
+                    Nie ustawiono jeszcze celu oszczędnościowego dla tego roku.
+                </p>
+                <a href="{% url 'ustaw_cel' %}" class="btn btn-primary mt-3 page-transition-link">
+                    Ustaw cel
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="table-card h-100">
+            <div class="goal-header mb-3">
+                <div>
+                    <h3 class="section-title">Miesiące</h3>
+                    <p class="section-subtitle">Kliknij miesiąc, aby zobaczyć szczegóły.</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped align-middle custom-table">
+                    <thead>
+                        <tr>
+                            <th>Miesiąc</th>
+                            <th>Przychody</th>
+                            <th>Wydatki</th>
+                            <th>Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for miesiac in miesiace %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'miesiac_detail' rok miesiac.nr %}" class="link-primary fw-semibold">
+                                        {{ miesiac.nazwa }}
+                                    </a>
+                                </td>
+                                <td class="table-amount positive">{{ miesiac.przychody|floatformat:2 }} PLN</td>
+                                <td class="table-amount negative">{{ miesiac.wydatki|floatformat:2 }} PLN</td>
+                                <td class="table-amount {% if miesiac.saldo >= 0 %}positive{% else %}negative{% endif %}">
+                                    {{ miesiac.saldo|floatformat:2 }} PLN
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="chart-card h-100">
+            <div class="goal-header mb-3">
+                <div>
+                    <h3 class="section-title">Struktura wydatków</h3>
+                    <p class="section-subtitle">Największe kategorie kosztów w roku {{ rok }}.</p>
+                </div>
+            </div>
+            <div class="chart-pie-wrap">
+                <canvas id="chart_kategorie"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ przychody_mies|json_script:"przychody-data" }}
+{{ wydatki_mies|json_script:"wydatki-data" }}
+{{ labels_kategorie|json_script:"labels-kategorie-data" }}
+{{ values_kategorie|json_script:"values-kategorie-data" }}
+
+<script>
+    const przychodyMies = JSON.parse(document.getElementById("przychody-data").textContent);
+    const wydatkiMies = JSON.parse(document.getElementById("wydatki-data").textContent);
+    const labelsKategorie = JSON.parse(document.getElementById("labels-kategorie-data").textContent);
+    const valuesKategorie = JSON.parse(document.getElementById("values-kategorie-data").textContent);
+
+    const chartSharedOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    boxWidth: 12,
+                    boxHeight: 12,
+                    usePointStyle: true,
+                    padding: 16,
+                    color: "#42516a",
+                    font: {
+                        size: 13,
+                        weight: "600"
+                    }
+                }
+            }
+        }
+    };
+
+    const chartMiesiaceEl = document.getElementById("chart_miesiace");
+    if (chartMiesiaceEl) {
+        new Chart(chartMiesiaceEl, {
+            type: "bar",
+            data: {
+                labels: [
+                    "Sty", "Lut", "Mar", "Kwi", "Maj", "Cze",
+                    "Lip", "Sie", "Wrz", "Paź", "Lis", "Gru"
+                ],
+                datasets: [
+                    {
+                        label: "Przychody",
+                        data: przychodyMies,
+                        backgroundColor: "rgba(70, 215, 164, 0.92)",
+                        borderRadius: 10,
+                        maxBarThickness: 28
+                    },
+                    {
+                        label: "Wydatki",
+                        data: wydatkiMies,
+                        backgroundColor: "rgba(232, 88, 112, 0.92)",
+                        borderRadius: 10,
+                        maxBarThickness: 28
+                    }
+                ]
+            },
+            options: {
+                ...chartSharedOptions,
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: "#52647d",
+                            font: { weight: "600" }
+                        }
+                    },
+                    y: {
+                        grid: { color: "rgba(17, 49, 89, 0.08)" },
+                        ticks: { color: "#52647d" }
+                    }
+                }
+            }
+        });
+    }
+
+    const chartKategorieEl = document.getElementById("chart_kategorie");
+    if (chartKategorieEl) {
+        new Chart(chartKategorieEl, {
+            type: "doughnut",
+            data: {
+                labels: labelsKategorie,
+                datasets: [{
+                    data: valuesKategorie,
+                    backgroundColor: [
+                        "#1f6feb",
+                        "#46d7a4",
+                        "#ffb648",
+                        "#ff6f7f",
+                        "#8f78ff",
+                        "#40b6f5",
+                        "#4ed4c8",
+                        "#f28b82"
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "58%",
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            boxWidth: 12,
+                            boxHeight: 12,
+                            usePointStyle: true,
+                            padding: 14,
+                            color: "#42516a",
+                            font: {
+                                size: 13,
+                                weight: "600"
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

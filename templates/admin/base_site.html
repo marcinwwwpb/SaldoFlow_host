@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:'Django admin' }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/custom_admin.css' %}">
+{% endblock %}
+
+{% block branding %}
+<div class="sf-admin-branding">
+    <img src="{% static 'img/pb_logo_horizontal.webp' %}" alt="Politechnika Białostocka" class="sf-admin-logo">
+    <div>
+        <div class="sf-admin-brand-title">{{ APP_NAME|default:"SaldoFlow" }} / Django admin</div>
+        <div class="sf-admin-brand-subtitle">Zarządzanie danymi, kontami i procesami systemowymi</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block nav-global %}
+<div class="sf-admin-links">
+    <a href="{% url 'paneladmin_dashboard' %}">Panel administratora</a>
+    <a href="{% url 'module_selector' %}">{{ APP_NAME|default:"SaldoFlow" }}</a>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Konta domowe - Budżet domowy{% endblock %}
+{% block brand_name %}Budżet domowy{% endblock %}
+
+{% block nav_actions %}
+{% include 'finanse/includes/home_navigation.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <span class="page-eyebrow">Konta</span>
+        <h1>Konta domowe</h1>
+        <p class="page-description">Zarządzaj rachunkami, portfelem i kontami oszczędnościowymi widocznymi w budżecie.</p>
+    </div>
+    <div class="page-header-actions">
+        <a class="btn btn-primary page-transition-link" href="{% url 'dodaj_konto' %}">Dodaj konto</a>
+    </div>
+</div>
+
+<div class="form-panel">
+  {% if konta %}
+  <div class="table-responsive">
+    <table class="table table-striped align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Nazwa konta</th>
+          <th>Typ</th>
+          <th>Saldo początkowe</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for konto in konta %}
+        <tr>
+          <td class="fw-semibold">{{ konto.nazwa }}</td>
+          <td>{{ konto.get_typ_display }}</td>
+          <td>{{ konto.saldo_poczatkowe|floatformat:2 }} PLN</td>
+          <td>{% if konto.aktywne %}<span class="badge text-bg-success">Aktywne</span>{% else %}<span class="badge text-bg-secondary">Nieaktywne</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="hero-note">
+      <h3 class="section-title">Nie masz jeszcze żadnego konta</h3>
+      <p class="page-description">Dodaj pierwsze konto, aby przypisywać do niego operacje i budować wiarygodny obraz swoich finansów.</p>
+      <a class="btn btn-primary page-transition-link" href="{% url 'dodaj_konto' %}">Dodaj pierwsze konto</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

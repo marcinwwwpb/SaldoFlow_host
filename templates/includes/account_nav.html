@@ -1,0 +1,25 @@
+{% if request.user.is_authenticated %}
+<div class="topbar-controls">
+    <div class="dropdown">
+        <button class="btn btn-topbar btn-topbar-icon dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu konta" title="Menu konta">
+            <span class="account-avatar-icon" aria-hidden="true">👤</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm user-menu app-dropdown-menu">
+            <li><span class="dropdown-item-text small text-muted">{{ request.user.email|default:'Brak adresu e-mail' }}</span></li>
+            <li><span class="dropdown-item-text fw-semibold">{{ request.user.get_full_name|default:request.user.username }}</span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item page-transition-link" href="{% url 'module_selector' %}">Centrum finansów</a></li>
+            <li><a class="dropdown-item page-transition-link" href="{% url 'lista_miesiecy' %}">Budżet domowy</a></li>
+            <li><a class="dropdown-item page-transition-link" href="{% url 'firma_dashboard' %}">Budżet firmowy</a></li>
+            <li><a class="dropdown-item page-transition-link" href="{% url 'ustawienia_firmy' %}">Ustawienia firmy</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form method="post" action="{% url 'accounts_logout' %}" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item">Wyloguj</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endif %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Dane operacyjne{% endblock %}
+{% block navbar_class %}firma-navbar admin-navbar{% endblock %}
+{% block nav_actions %}<div class="header-actions header-actions-scroll simple-back-nav"><a href="{% url 'module_selector' %}" class="btn btn-topbar btn-topbar-back page-transition-link">Powrót</a></div>{% endblock %}
+{% block nav_user_actions %}{% endblock %}
+{% block content %}
+<div class="page-header page-header-compact"><div class="page-header-content"><span class="page-eyebrow">Administracja</span><h1>Dane operacyjne</h1><p class="page-description">Ręczna korekta danych domowych i firmowych przeniesiona do osobnej sekcji, żeby ekran główny administratora pozostał czytelny.</p></div></div>
+{% include 'paneladmin/includes/subnav.html' %}
+<div class="table-card p-4 mb-4">
+    <div class="goal-header mb-3"><div><h3 class="section-title">Zakres pracy panelu</h3><p class="section-subtitle">Dla wydajności formularze i listy operują na wybranym użytkowniku zamiast ładować pełne przekroje całej bazy.</p></div></div>
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-5"><label class="form-label">Użytkownik</label><select name="selected_user" class="form-select"><option value="">Wszyscy użytkownicy</option>{% for user in record_user_options %}<option value="{{ user.id }}" {% if record_filters.selected_user|stringformat:'s' == user.id|stringformat:'s' %}selected{% endif %}>{{ user.username }}{% if user.get_full_name %} — {{ user.get_full_name }}{% endif %}</option>{% endfor %}</select></div>
+        <div class="col-lg-3 d-flex gap-2"><button class="btn btn-primary w-100">Pokaż</button><a href="{% url 'paneladmin_records' %}" class="btn btn-outline-secondary">Wyczyść</a></div>
+        <div class="col-lg-4">{% if selected_user %}<div class="small text-muted">Aktywny zakres: <strong>{{ selected_user.username }}</strong>. Listy i słowniki formularzy są zawężone do tego użytkownika.</div>{% else %}<div class="small text-muted">Brak filtra — listy pokazują tylko ostatnie rekordy, ale formularze nie ładują pełnych słowników kont i kontrahentów.</div>{% endif %}</div>
+    </form>
+</div>
+<div class="row g-4 mb-4">
+    <div class="col-xl-6">
+        <div class="form-panel p-4 h-100 admin-section admin-dom">
+            <div class="goal-header mb-3"><div><h3 class="section-title">{{ dom_edit_instance|yesno:'Edytuj pozycję domową,Dodaj pozycję do budżetu domowego' }}</h3></div></div>
+            {% if can_manage_admin_panel %}
+            <form method="post" action="{% url 'paneladmin_zapisz_dom' %}" class="row g-3">
+                {% csrf_token %}
+                {% if selected_user %}<input type="hidden" name="selected_user" value="{{ selected_user.id }}">{% endif %}
+                {% if dom_edit_instance %}<input type="hidden" name="operacja_id" value="{{ dom_edit_instance.id }}">{% endif %}
+                {% for field in dom_form %}<div class="col-12 {% if field.name in 'uzytkownik konto kwota data typ_operacji kategoria' %}col-md-6{% endif %}"><label class="form-label">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|striptags }}</div>{% endif %}</div>{% endfor %}
+                <div class="col-12 d-flex gap-2 flex-wrap"><button class="btn btn-success">{{ dom_edit_instance|yesno:'Zapisz zmiany,Dodaj pozycję' }}</button>{% if dom_edit_instance %}<a class="btn btn-outline-secondary" href="{% url 'paneladmin_records' %}">Anuluj edycję</a>{% endif %}</div>
+            </form>
+            {% else %}
+            <div class="hero-note"><h3 class="section-title">Tryb audytowy</h3><p class="page-description mb-0">Podgląd danych jest dostępny, ale edycja i usuwanie rekordów są zablokowane dla roli audytora.</p></div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-xl-6">
+        <div class="form-panel p-4 h-100 admin-section admin-firma">
+            <div class="goal-header mb-3"><div><h3 class="section-title">{{ firma_edit_instance|yesno:'Edytuj koszt firmowy,Dodaj koszt firmowy' }}</h3></div></div>
+            {% if can_manage_admin_panel %}
+            <form method="post" action="{% url 'paneladmin_zapisz_firma' %}" class="row g-3">
+                {% csrf_token %}
+                {% if selected_user %}<input type="hidden" name="selected_user" value="{{ selected_user.id }}">{% endif %}
+                {% if firma_edit_instance %}<input type="hidden" name="faktura_id" value="{{ firma_edit_instance.id }}">{% endif %}
+                {% for field in firma_form %}<div class="col-12 {% if field.name in 'user kontrahent data_zakupu kwota_netto kwota_vat kwota_brutto miesiac_jpk rodzaj_zakupu kod_kraju' %}col-md-6{% endif %}"><label class="form-label">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|striptags }}</div>{% endif %}</div>{% endfor %}
+                <div class="col-12">{% include 'firma/includes/nip_lookup_card.html' with button_id='ceidg-admin-firma-btn' status_id='ceidg-admin-firma-status' %}</div>
+                <div class="col-12 d-flex gap-2 flex-wrap"><button class="btn btn-warning">{{ firma_edit_instance|yesno:'Zapisz zmiany,Dodaj koszt' }}</button>{% if firma_edit_instance %}<a class="btn btn-outline-secondary" href="{% url 'paneladmin_records' %}">Anuluj edycję</a>{% endif %}</div>
+            </form>
+            {% else %}
+            <div class="hero-note"><h3 class="section-title">Tryb audytowy</h3><p class="page-description mb-0">Możesz analizować rekordy i importy, ale nie zmienisz danych źródłowych.</p></div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-6"><div class="table-card p-4 h-100"><div class="goal-header mb-3"><div><h3 class="section-title">Ostatnie operacje domowe</h3></div></div><div class="admin-mini-list">{% for row in ostatnie_operacje %}<div class="admin-mini-item"><strong>{{ row.tytul }}</strong><span>{{ row.uzytkownik }} · {{ row.kwota|floatformat:2 }} PLN · {{ row.data }}</span>{% if can_manage_admin_panel %}<div class="d-flex gap-2 mt-2"><a class="btn btn-sm btn-outline-primary" href="?edit_dom={{ row.id }}{% if selected_user %}&selected_user={{ selected_user.id }}{% endif %}">Edytuj</a><a class="btn btn-sm btn-outline-danger" href="{% url 'paneladmin_usun_dom' row.id %}" onclick="return confirm('Usunąć operację i przenieść do archiwum?');">Usuń</a></div>{% endif %}</div>{% empty %}<div class="text-muted">Brak danych.</div>{% endfor %}</div></div></div>
+    <div class="col-lg-6"><div class="table-card p-4 h-100"><div class="goal-header mb-3"><div><h3 class="section-title">Ostatnie koszty firmowe</h3></div></div><div class="admin-mini-list">{% for row in ostatnie_koszty %}<div class="admin-mini-item"><strong>{{ row.numer_faktury }}</strong><span>{{ row.user }} · {{ row.kwota_brutto|floatformat:2 }} PLN · {{ row.data_zakupu }}</span>{% if can_manage_admin_panel %}<div class="d-flex gap-2 mt-2"><a class="btn btn-sm btn-outline-primary" href="?edit_firma={{ row.id }}{% if selected_user %}&selected_user={{ selected_user.id }}{% endif %}">Edytuj</a><a class="btn btn-sm btn-outline-danger" href="{% url 'paneladmin_usun_firma' row.id %}" onclick="return confirm('Usunąć koszt i przenieść do archiwum?');">Usuń</a></div>{% endif %}</div>{% empty %}<div class="text-muted">Brak danych.</div>{% endfor %}</div></div></div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+{% if can_manage_admin_panel %}
+{% include 'firma/includes/nip_lookup_script.html' with button_id='ceidg-admin-firma-btn' status_id='ceidg-admin-firma-status' nip_field_id='id_nip_dostawcy' name_field_id='id_kontrahent_nazwa' nip_target_field_id='id_nip_dostawcy' %}
+{% endif %}
+{% endblock %}

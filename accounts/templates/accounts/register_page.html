@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Rejestracja — {{ APP_NAME }}{% endblock %}
+{% block body_class %}public-shell{% endblock %}
+{% block content %}
+<div class="auth-grid">
+    <section class="auth-card auth-card-clean">
+        <span class="page-eyebrow">Nowe konto</span>
+        <h1>Załóż konto</h1>
+        <p class="page-description">Podaj podstawowe dane, ustaw hasło i potwierdź adres e-mail, aby aktywować dostęp.</p>
+        <form method="post" class="row g-3 mt-1">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="col-12"><div class="alert alert-danger">{{ form.non_field_errors }}</div></div>{% endif %}
+            <div class="col-md-6"><label class="form-label">{{ form.first_name.label }}</label>{{ form.first_name }}{% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors|striptags }}</div>{% endif %}</div>
+            <div class="col-md-6"><label class="form-label">{{ form.last_name.label }}</label>{{ form.last_name }}{% if form.last_name.errors %}<div class="text-danger small mt-1">{{ form.last_name.errors|striptags }}</div>{% endif %}</div>
+            <div class="col-12"><label class="form-label">{{ form.email.label }}</label>{{ form.email }}{% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors|striptags }}</div>{% endif %}</div>
+            <div class="col-md-6"><label class="form-label">{{ form.password1.label }}</label>{{ form.password1 }}{% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors|striptags }}</div>{% endif %}</div>
+            <div class="col-md-6"><label class="form-label">{{ form.password2.label }}</label>{{ form.password2 }}{% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors|striptags }}</div>{% endif %}</div>
+            <div class="col-12"><div class="form-check">{{ form.privacy }} <label class="form-check-label" for="{{ form.privacy.id_for_label }}">{{ form.privacy.label }}</label></div>{% if form.privacy.errors %}<div class="text-danger small mt-1">{{ form.privacy.errors|striptags }}</div>{% endif %}</div>
+            <div class="col-12"><button class="btn btn-primary w-100">Utwórz konto</button></div>
+        </form>
+    </section>
+
+    <aside class="checklist-card checklist-card-clean">
+        <span class="soft-badge">Po rejestracji</span>
+        <div class="metric-shell mt-3">
+            <h3>Aktywacja e-mail</h3>
+            <p>Link aktywacyjny jest wysyłany z adresu skonfigurowanego w pliku środowiskowym.</p>
+        </div>
+        <div class="metric-shell mt-3">
+            <h3>Gotowy start</h3>
+            <p>Po zalogowaniu od razu przejdziesz do centrum finansów i wybierzesz odpowiedni obszar pracy.</p>
+        </div>
+    </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Importy demona{% endblock %}
+{% block brand_name %}Panel firmy{% endblock %}
+
+{% block nav_actions %}
+    {% include "firma/includes/company_navigation.html" %}
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Importy wykryte przez demona</h1>
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Plik</th>
+                <th>Status</th>
+                <th>Rekordy</th>
+                <th>Błędy</th>
+                <th>Źródło</th>
+                <th>Komunikat</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in importy %}
+            <tr>
+                <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ item.nazwa_pliku }}</td>
+                <td><span class="badge text-bg-secondary">{{ item.get_status_display }}</span></td>
+                <td>{{ item.liczba_rekordow }}</td>
+                <td>{{ item.liczba_bledow }}</td>
+                <td><code>{{ item.sciezka_zrodlowa }}</code></td>
+                <td>{{ item.komunikat|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7">Brak importów z demona.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
