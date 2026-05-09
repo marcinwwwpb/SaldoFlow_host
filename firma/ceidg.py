@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+import json
 from hashlib import sha1
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
-import xml.etree.ElementTree as ET
 
 from django.conf import settings
 
-SOAP_URL = getattr(settings, "CEIDG_SOAP_URL", "https://datastore.ceidg.gov.pl/CEIDG.DataStore/Services/NewDataStoreProvider.svc")
-SOAP_ACTION = "http://tempuri.org/INewDataStoreProvider/GetMigrationDataExtendedAddressInfo"
+
+API_URL = getattr(
+    settings,
+    "CEIDG_API_URL",
+    "https://dane.biznes.gov.pl/api/ceidg/v2/firmy",
+)
+
 
 DEMO_CITY_POOL = [
     ("Białystok", "15-001"),
@@ -36,49 +42,105 @@ def _clean_nip(nip: str) -> str:
     return "".join(ch for ch in str(nip or "") if ch.isdigit())
 
 
-def _build_envelope(nip: str, token: str) -> bytes:
-    envelope = f'''<?xml version="1.0" encoding="utf-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:arr="http://schemas.microsoft.com/2003/10/Serialization/Arrays">
-  <soapenv:Header/>
-  <soapenv:Body>
-    <tem:GetMigrationDataExtendedAddressInfo>
-      <tem:AuthToken>{token}</tem:AuthToken>
-      <tem:NIP>
-        <arr:string>{nip}</arr:string>
-      </tem:NIP>
-    </tem:GetMigrationDataExtendedAddressInfo>
-  </soapenv:Body>
-</soapenv:Envelope>'''
-    return envelope.encode("utf-8")
+def _norm_key(key: str) -> str:
+    return str(key or "").lower().replace("_", "").replace("-", "").replace(" ", "")
 
 
-def _find_text_anywhere(root, tag_names):
-    for node in root.iter():
-        local_name = node.tag.split("}")[-1]
-        if local_name in tag_names and node.text:
-            text = node.text.strip()
-            if text:
-                return text
+def _walk_dicts(value):
+    if isinstance(value, dict):
+        yield value
+        for child in value.values():
+            yield from _walk_dicts(child)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _walk_dicts(item)
+
+
+def _pick(record: dict, names: list[str]) -> str:
+    wanted = {_norm_key(name) for name in names}
+
+    for d in _walk_dicts(record):
+        for key, value in d.items():
+            if _norm_key(key) in wanted and value not in (None, ""):
+                if isinstance(value, (dict, list)):
+                    continue
+                return str(value).strip()
+
     return ""
 
 
-def _compose_address(root):
-    address_root = None
-    for node in root.iter():
-        local_name = node.tag.split("}")[-1]
-        if local_name in {"AdresGlownegoMiejscaWykonywaniaDzialalnosci", "AdresDoDoreczen"}:
-            address_root = node
-            break
-    if address_root is None:
-        return ""
-    parts = [
-        _find_text_anywhere(address_root, {"Ulica"}),
-        _find_text_anywhere(address_root, {"Budynek"}),
-        _find_text_anywhere(address_root, {"Lokal"}),
-        _find_text_anywhere(address_root, {"KodPocztowy"}),
-        _find_text_anywhere(address_root, {"Miejscowosc", "Poczta"}),
-    ]
-    return ", ".join(part for part in parts if part)
+def _first_company_record(payload, nip: str) -> dict:
+    if isinstance(payload, list):
+        candidates = payload
+    elif isinstance(payload, dict):
+        candidates = []
+
+        for key in ["data", "items", "results", "content", "firmy", "firma"]:
+            value = payload.get(key)
+            if isinstance(value, list):
+                candidates.extend(value)
+            elif isinstance(value, dict):
+                candidates.append(value)
+
+        if not candidates:
+            candidates = [payload]
+    else:
+        candidates = []
+
+    for item in candidates:
+        if not isinstance(item, dict):
+            continue
+
+        found_nip = _pick(item, ["nip", "NIP"])
+        if not found_nip or _clean_nip(found_nip) == nip:
+            return item
+
+    for item in candidates:
+        if isinstance(item, dict):
+            return item
+
+    raise RuntimeError("CEIDG nie zwróciło danych dla podanego NIP.")
+
+
+def _compose_address(record: dict) -> str:
+    address_candidates = []
+
+    for d in _walk_dicts(record):
+        for key, value in d.items():
+            key_norm = _norm_key(key)
+            if key_norm in {
+                "adres",
+                "adresdzialalnosci",
+                "adresglownegomiejscawykonywaniadzialalnosci",
+                "adresdodreczen",
+                "adreskorespondencyjny",
+            }:
+                if isinstance(value, str):
+                    return value.strip()
+                if isinstance(value, dict):
+                    address_candidates.append(value)
+
+    if not address_candidates:
+        address_candidates = [record]
+
+    for address in address_candidates:
+        street = _pick(address, ["ulica", "nazwaUlicy"])
+        building = _pick(address, ["budynek", "nrBudynku", "numerBudynku"])
+        flat = _pick(address, ["lokal", "nrLokalu", "numerLokalu"])
+        postal = _pick(address, ["kodPocztowy"])
+        city = _pick(address, ["miejscowosc", "poczta", "miasto"])
+
+        line1 = " ".join(part for part in [street, building] if part)
+        if flat:
+            line1 = f"{line1}/{flat}" if line1 else flat
+
+        line2 = " ".join(part for part in [postal, city] if part)
+
+        result = ", ".join(part for part in [line1, line2] if part)
+        if result:
+            return result
+
+    return ""
 
 
 def _demo_company_by_nip(nip: str) -> dict[str, str]:
@@ -90,10 +152,12 @@ def _demo_company_by_nip(nip: str) -> dict[str, str]:
     last = DEMO_LAST_NAMES[digest[4] % len(DEMO_LAST_NAMES)]
     business = DEMO_BUSINESS_WORDS[digest[5] % len(DEMO_BUSINESS_WORDS)]
     suffix = DEMO_BUSINESS_SUFFIXES[digest[6] % len(DEMO_BUSINESS_SUFFIXES)]
+
     company_name = f"{business} {suffix} {first} {last}"
     regon = f"{int.from_bytes(digest[7:11], 'big') % 10**9:09d}"
     phone = f"+48 {500 + digest[11] % 400} {100 + digest[12] % 900} {100 + digest[13] % 900}"
     email_local = f"{suffix.lower()}.{last.lower()}".replace("ł", "l")
+
     return {
         "nazwa": company_name,
         "nip": nip,
@@ -108,57 +172,98 @@ def _demo_company_by_nip(nip: str) -> dict[str, str]:
     }
 
 
-def _lookup_via_soap(nip: str, token: str) -> dict[str, str]:
-    request = Request(
-        SOAP_URL,
-        data=_build_envelope(nip, token),
-        headers={
-            "Content-Type": "text/xml; charset=utf-8",
-            "SOAPAction": SOAP_ACTION,
-        },
+def _request_api_json(nip: str, token: str):
+    url = f"{API_URL}?{urlencode({'nip': nip})}"
+
+    auth_variants = [
+        f"Bearer {token}",
+        token,
+    ]
+
+    last_error = None
+
+    for auth_header in auth_variants:
+        request = Request(
+            url,
+            headers={
+                "Accept": "application/json",
+                "Authorization": auth_header,
+                "User-Agent": "SaldoFlow/1.0",
+            },
+        )
+
+        try:
+            with urlopen(request, timeout=20) as response:
+                raw = response.read().decode("utf-8")
+                return json.loads(raw)
+        except HTTPError as exc:
+            last_error = exc
+            if exc.code in (401, 403):
+                continue
+
+            try:
+                body = exc.read().decode("utf-8", errors="ignore")
+            except Exception:
+                body = ""
+
+            raise RuntimeError(f"Błąd CEIDG: HTTP {exc.code}. {body[:300]}") from exc
+        except URLError as exc:
+            raise RuntimeError("Nie udało się połączyć z CEIDG.") from exc
+
+    if last_error is not None:
+        raise RuntimeError(
+            "CEIDG odrzuciło token. Sprawdź, czy klucz API jest aktywny "
+            "i czy wkleiłeś go w Railway jako CEIDG_AUTH_TOKEN."
+        )
+
+    raise RuntimeError("Nie udało się pobrać danych z CEIDG.")
+
+
+def _lookup_via_api(nip: str, token: str) -> dict[str, str]:
+    payload = _request_api_json(nip, token)
+    record = _first_company_record(payload, nip)
+
+    first_name = _pick(record, ["imie", "imiePierwsze", "pierwszeImie"])
+    last_name = _pick(record, ["nazwisko"])
+    owner = " ".join(part for part in [first_name, last_name] if part)
+
+    name = _pick(
+        record,
+        [
+            "nazwa",
+            "firma",
+            "nazwaFirmy",
+            "nazwaPrzedsiebiorcy",
+            "nazwaPelna",
+        ],
     )
 
-    try:
-        with urlopen(request, timeout=15) as response:
-            payload = response.read()
-    except HTTPError as exc:
-        raise RuntimeError(f"Błąd CEIDG: HTTP {exc.code}.") from exc
-    except URLError as exc:
-        raise RuntimeError("Nie udało się połączyć z CEIDG.") from exc
-
-    root = ET.fromstring(payload)
-    firma = _find_text_anywhere(root, {"Firma", "Nazwa"})
-    if not firma:
-        raise RuntimeError("CEIDG nie zwróciło danych dla podanego NIP.")
-
-    owner_parts = [
-        _find_text_anywhere(root, {"Imie"}),
-        _find_text_anywhere(root, {"Nazwisko"}),
-    ]
-    wlasciciel = " ".join(part for part in owner_parts if part)
-
     return {
-        "nazwa": firma,
-        "nip": _find_text_anywhere(root, {"NIP"}) or nip,
-        "regon": _find_text_anywhere(root, {"REGON"}),
-        "adres": _compose_address(root),
-        "email": _find_text_anywhere(root, {"AdresPocztyElektronicznej"}),
-        "telefon": _find_text_anywhere(root, {"Telefon"}),
-        "strona_www": _find_text_anywhere(root, {"AdresStronyInternetowej"}),
-        "status_rejestru": _find_text_anywhere(root, {"Status"}),
-        "wlasciciel": wlasciciel,
+        "nazwa": name or owner,
+        "nip": _clean_nip(_pick(record, ["nip", "NIP"]) or nip),
+        "regon": _pick(record, ["regon", "REGON"]),
+        "adres": _compose_address(record),
+        "email": _pick(record, ["email", "adresPocztyElektronicznej", "adresEmail"]),
+        "telefon": _pick(record, ["telefon", "numerTelefonu"]),
+        "strona_www": _pick(record, ["www", "stronaWWW", "adresStronyInternetowej"]),
+        "status_rejestru": _pick(record, ["status", "statusDzialalnosci", "statusRejestru"]),
+        "wlasciciel": owner,
         "source": "ceidg",
     }
 
 
 def lookup_company_by_nip(nip: str):
     nip = _clean_nip(nip)
+
     if len(nip) != 10:
         raise ValueError("Podaj poprawny NIP.")
 
     token = getattr(settings, "CEIDG_AUTH_TOKEN", "")
+
     if token:
-        return _lookup_via_soap(nip, token)
+        return _lookup_via_api(nip, token)
+
     if getattr(settings, "CEIDG_DEMO_MODE", False):
         return _demo_company_by_nip(nip)
+
     raise RuntimeError("Pobieranie danych po NIP jest chwilowo niedostępne.")
