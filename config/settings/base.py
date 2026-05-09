@@ -115,7 +115,7 @@ EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', True)
 CEIDG_AUTH_TOKEN = env('CEIDG_AUTH_TOKEN', '')
 CEIDG_DEMO_MODE = env_bool('CEIDG_DEMO_MODE', DEBUG or not bool(CEIDG_AUTH_TOKEN))
 CEIDG_SOAP_URL = env('CEIDG_SOAP_URL', 'https://datastore.ceidg.gov.pl/CEIDG.DataStore/Services/NewDataStoreProvider.svc')
-CEIDG_API_URL = env('CEIDG_API_URL', 'https://dane.biznes.gov.pl/api/ceidg/v2/firmy')
+CEIDG_API_URL = env('CEIDG_API_URL', 'https://dane.biznes.gov.pl/api/ceidg/v3/firmy')
 
 DEMON_STATUS_DIR = BASE_DIR / env('DEMON_STATUS_DIR', 'runtime/daemon_status')
 DEMON_SERVICES = {

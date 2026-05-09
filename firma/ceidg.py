@@ -12,7 +12,7 @@ from django.conf import settings
 API_URL = getattr(
     settings,
     "CEIDG_API_URL",
-    "https://dane.biznes.gov.pl/api/ceidg/v2/firmy",
+    "https://dane.biznes.gov.pl/api/ceidg/v3/firmy",
 )
 
 
