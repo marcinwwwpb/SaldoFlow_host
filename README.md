@@ -12,7 +12,7 @@ SaldoFlow to projekt demonstracyjny do zarządzania budżetem domowym, finansami
 - konta demonstracyjne z różnymi poziomami uprawnień
 
 ## Główne konta demonstracyjne
-- superadmin: `marcin / danzel12`
+- superadmin: `marcin / admin`
 - księgowy: `ksiegowy / ksiegowy123`
 - audytor: `audytor / audytor123`
 - użytkownik testowy: `test / test`
